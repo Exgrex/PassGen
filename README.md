@@ -6,6 +6,7 @@ Gerador de senhas seguras rodando localmente, com variações a partir de temas 
 App de desktop simples e direto: cria senhas aleatórias fortes sem depender de internet, e ajuda a transformar um tema ou palavra que você gosta em várias opções de senha — tudo processado no seu próprio dispositivo.
 
 Funcionalidades
+
 Senhas aleatórias de 5 a 24 caracteres, com controle sobre maiúsculas, minúsculas, números e símbolos.
 Indicador de força da senha gerada.
 Modo escuro, com preferência lembrada entre usos.
