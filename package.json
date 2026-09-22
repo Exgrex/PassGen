@@ -16,6 +16,7 @@
   "build": {
     "appId": "com.cofre.geradorsenhas",
     "productName": "Cofre - Gerador de Senhas",
+    "asar": false,
     "files": [
       "main.js",
       "app/**/*"
