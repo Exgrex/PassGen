@@ -1,0 +1,8 @@
+{
+  "name": "cofre-gerador-senhas",
+  "version": "1.0.0",
+  "description": "Gerador de senhas local, com variações e referências por tema",
+  "main": "main.js",
+  "author": "",
+  "license": "MIT"
+}
