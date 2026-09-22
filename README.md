@@ -1,8 +1,6 @@
 # PassGen
 PT-BR: App de desktop pra gerar senhas fortes localmente, com sugestões de variação baseadas em temas que você gosta.   EN: Desktop app for generating strong passwords locally, with variation suggestions based on themes you like.
 
-Gerador de Senhas
-
 Gerador de senhas seguras rodando localmente, com variações a partir de temas de interesse.
 
 App de desktop simples e direto: cria senhas aleatórias fortes sem depender de internet, e ajuda a transformar um tema ou palavra que você gosta em várias opções de senha — tudo processado no seu próprio dispositivo.
