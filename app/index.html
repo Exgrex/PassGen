@@ -250,10 +250,10 @@
     <p class="section-title">Referências por tema</p>
     <p class="section-note">
       Digite um tema, nome ou interesse — não sua senha. No Artifact do claude.ai,
-      pergunta ao Claude; rodando fora dele (app de desktop, HTML local), usa a
-      Datamuse, uma API gratuita de associação de palavras, e opcionalmente sua
-      própria chave da Anthropic (veja "opções avançadas" abaixo). Nada disso é
-      gravado. Se não houver conexão disponível, o app avisa em vez de travar.
+      pergunta ao Claude; fora dele (app de desktop, HTML local), busca na
+      Wikipédia e na Datamuse — ambas gratuitas, sem chave — e opcionalmente na
+      sua própria chave da Anthropic (veja "opções avançadas"). Sem internet, cai
+      numa base de temas populares embutida no app.
     </p>
     <input type="text" id="topicInput" placeholder="escreva um tema ou algo que você goste bastante" maxlength="60">
     <button class="secondary" id="topicBtn">Buscar referências</button>
@@ -465,9 +465,78 @@ doGenerate();
   });
 })();
 
+// --- Base local de temas (offline, sem internet) ---
+const LOCAL_TOPICS = {
+  "bts":["bangtan","army","dynamite","butter","jimin","jungkook","taehyung","namjoon"],
+  "blackpink":["jisoo","jennie","rose","lisa","yg","ddu","pink"],
+  "twice":["once","nayeon","sana","momo","tzuyu","fancy"],
+  "newjeans":["bunnies","hanni","danielle","haerin","minji","ador"],
+  "stray kids":["skz","stay","bangchan","felix","hyunjin","chk"],
+  "seventeen":["carat","svt","hoshi","mingyu","woozi"],
+  "exo":["exol","baekhyun","chanyeol","kai","suho"],
+  "ateez":["atiny","hongjoong","seonghwa","wooyoung"],
+  "kpop":["idol","bias","comeback","fandom","debut","stan"],
+  "taylor swift":["swiftie","eras","lover","folklore","cardigan"],
+  "billie eilish":["ocean","bellyache","happier","bad guy"],
+  "hoshimachi suisei":["comet","hololive","vtuber","stardust","suisui"],
+  "hololive":["oshi","vtuber","towa","marine","gura","superchat"],
+  "vtuber":["oshi","stream","superchat","rigging","model3d"],
+  "naruto":["hokage","shinobi","konoha","sasuke","sakura","kunai"],
+  "one piece":["luffy","strawhat","zoro","nakama","grandline"],
+  "attack on titan":["eren","titan","survey","mikasa","wall"],
+  "demon slayer":["tanjiro","nezuko","hashira","breathing"],
+  "jujutsu kaisen":["gojo","itadori","cursed","sukuna","jjk"],
+  "my hero academia":["deku","allmight","quirk","ua","bakugo"],
+  "dragon ball":["goku","saiyan","kamehameha","vegeta"],
+  "sailor moon":["usagi","moonlight","guardian","luna"],
+  "studio ghibli":["totoro","spirited","howl","miyazaki"],
+  "pokemon":["pikachu","trainer","gotta","catch","poke"],
+  "minecraft":["creeper","diamond","crafting","steve","redstone"],
+  "fortnite":["battle","royale","victory","llama","storm"],
+  "league of legends":["summoner","rift","nexus","lol","penta"],
+  "valorant":["agent","spike","clutch","ace"],
+  "zelda":["hyrule","link","triforce","hero","master"],
+  "genshin impact":["traveler","teyvat","primogem","archon"],
+  "among us":["impostor","crewmate","vent","sus","task"],
+  "roblox":["robux","noob","avatar","blox"],
+  "gta":["vice","liberty","heist","wasted"],
+  "marvel":["avenger","stark","hero","infinity","shield"],
+  "star wars":["jedi","force","skywalker","droid","saber"],
+  "harry potter":["hogwarts","wizard","wand","quidditch","muggle"],
+  "stranger things":["hawkins","upside","eleven","demogorgon"],
+  "disney":["magic","castle","princess","pixar"],
+  "futebol":["gol","craque","torcida","camisa","estadio"],
+  "formula 1":["pole","podio","boxes","piloto","grid"],
+  "sol":["astro","raio","calor","luz","verao","dourado"],
+  "lua":["luar","crescente","noite","satelite","prata"],
+  "mar":["onda","praia","sal","azul","mare","oceano"],
+  "floresta":["verde","trilha","folhas","selva","natureza"],
+  "montanha":["pico","trilha","altitude","rocha","cume"],
+  "cafe":["expresso","aroma","xicara","grao","cafeina"],
+  "gato":["felino","miau","bigode","pata","ronronar"],
+  "cachorro":["latido","fiel","pata","rex","amigo"],
+  "viagem":["mala","destino","passagem","roteiro","aventura"],
+  "inverno":["frio","neve","cobertor","gelo"],
+  "verao":["calor","praia","sol","ferias"],
+  "estrelas":["constelacao","brilho","noite","galaxia","cosmos"]
+};
+
+function normalizeTopic(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+function findLocalTopic(topic) {
+  const norm = normalizeTopic(topic);
+  if (LOCAL_TOPICS[norm]) return LOCAL_TOPICS[norm];
+  const keys = Object.keys(LOCAL_TOPICS);
+  const match = keys.find(k => norm.includes(k) || k.includes(norm));
+  return match ? LOCAL_TOPICS[match] : null;
+}
+
 // --- Referências por tema ---
-// Ordem de tentativa: 1) capacidade "sample" (só existe dentro do Artifact do
-// claude.ai) 2) Datamuse, API pública e gratuita de associação de palavras
+// Ordem de tentativa: 0) base local embutida (sem internet) 1) capacidade
+// "sample" (só existe dentro do Artifact do claude.ai) 2) Datamuse, API
+// pública e gratuita de associação de palavras
 // (funciona fora do Artifact, ex: app de desktop) 3) chave própria da
 // Anthropic, se o usuário salvou uma.
 
@@ -507,6 +576,39 @@ async function fetchViaDatamuse(topic) {
   if (!res.ok) throw new Error('datamuse_error');
   const data = await res.json();
   return Array.isArray(data) ? data.map(item => item.word).filter(Boolean) : [];
+}
+
+const STOPWORDS = new Set(['de','da','do','das','dos','em','com','para','por','uma','um','os','as',
+  'the','and','for','with','from','this','that','was','are','its','his','her','their']);
+
+async function fetchViaWikipedia(topic) {
+  // 1) acha o artigo mais próximo do tema digitado
+  const searchRes = await fetch('https://pt.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=1&search=' + encodeURIComponent(topic));
+  if (!searchRes.ok) throw new Error('wiki_search_error');
+  const searchData = await searchRes.json();
+  const title = searchData[1] && searchData[1][0];
+  if (!title) return [];
+
+  // 2) pega categorias e links do artigo — são a fonte das palavras relacionadas
+  const infoRes = await fetch('https://pt.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=categories|links&pllimit=30&cllimit=20&titles=' + encodeURIComponent(title));
+  if (!infoRes.ok) throw new Error('wiki_info_error');
+  const infoData = await infoRes.json();
+  const pages = infoData.query && infoData.query.pages;
+  if (!pages) return [];
+  const page = Object.values(pages)[0];
+  const raw = [];
+  (page.categories || []).forEach(c => raw.push(c.title.replace('Categoria:', '')));
+  (page.links || []).forEach(l => raw.push(l.title));
+
+  const topicNorm = normalizeTopic(topic);
+  const words = raw
+    .filter(t => !t.includes(':'))
+    .flatMap(t => t.split(/\s+/))
+    .map(w => normalizeTopic(w).replace(/[^a-z0-9]/g, ''))
+    .filter(w => w.length >= 3 && w.length <= 16)
+    .filter(w => w !== topicNorm && !STOPWORDS.has(w));
+
+  return [...new Set(words)].slice(0, 8);
 }
 
 async function fetchViaAnthropicKey(topic, apiKey) {
@@ -594,7 +696,16 @@ document.getElementById('topicBtn').addEventListener('click', async () => {
     // qualquer outro erro: segue para as próximas fontes
   }
 
-  // 2) Datamuse (gratuita, funciona fora do Artifact)
+  // 2) Wikipédia (gratuita, sem chave, boa pra nomes próprios e temas específicos)
+  try {
+    const words = await fetchViaWikipedia(topic);
+    if (words.length) {
+      renderTopicWords(words, status, out);
+      return;
+    }
+  } catch (e) { /* sem internet, ou artigo não encontrado: segue */ }
+
+  // 3) Datamuse (gratuita, boa pra palavras comuns do dia a dia)
   try {
     const words = await fetchViaDatamuse(topic);
     if (words.length) {
@@ -603,7 +714,7 @@ document.getElementById('topicBtn').addEventListener('click', async () => {
     }
   } catch (e) { /* sem internet, ou fora de um ambiente que permite isso: segue */ }
 
-  // 3) chave própria da Anthropic, se salva
+  // 4) chave própria da Anthropic, se salva
   const apiKey = getApiKey();
   if (apiKey) {
     try {
@@ -619,7 +730,15 @@ document.getElementById('topicBtn').addEventListener('click', async () => {
     }
   }
 
-  status.textContent = 'Sem conexão disponível para essa feature agora. Tente novamente mais tarde ou use variações manuais abaixo.';
+  // 5) base local embutida — só entra se nada acima funcionou (ex: sem internet)
+  const localWords = findLocalTopic(topic);
+  if (localWords) {
+    status.textContent = 'sem conexão — usando base local embutida:';
+    renderTopicWords(localWords, status, out);
+    return;
+  }
+
+  status.textContent = 'Sem conexão disponível e esse tema não está na base local. Tente novamente mais tarde ou use variações manuais abaixo.';
 });
 
 document.getElementById('apiKeySave').addEventListener('click', () => {
