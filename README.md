@@ -1,5 +1,5 @@
 # PassGen
-PT-BR: App de desktop pra gerar senhas fortes localmente, com sugestões de variação baseadas em temas que você gosta.   EN: Desktop app for generating strong passwords locally, with variation suggestions based on themes you like.
+Desktop app for generating strong passwords locally, with variation suggestions based on themes you like.
 
 Gerador de senhas seguras rodando localmente, com variações a partir de temas de interesse.
 
@@ -15,5 +15,6 @@ Referências por tema: digite um assunto que você goste e o app sugere palavras
 
 Sobre a feature "Referências por tema"
 
-Essa parte pergunta a um modelo de IA por palavras associadas a um tema digitado. Ela só funciona quando o app está publicado como Artifact dentro do claude.ai, pois depende de uma conexão exclusiva desse ambiente. Rodando como app de desktop ou como HTML local, o app avisa que a conexão não está disponível — o gerador de senha e as variações locais continuam funcionando normalmente, sem precisar de internet.
+Essa parte pergunta a um modelo de IA por palavras associadas a um tema digitado ou para a api da Wikipedia e Musedata. Ela funciona normalmente mas possui mais utilidade conectando a api da Artifact.
+
 
