@@ -1,259 +1,617 @@
-# PassGen
-# EN
-🔐 PassGen
+# 🔐 PassGen
 
-A local-first desktop password generator focused on strong passwords, privacy, and customizable variations.
+**Desktop password generator focused on security, privacy, and local processing.**
 
-PassGen is a simple desktop application designed to generate strong passwords locally, without requiring an internet connection for its core password-generation features.
+**PassGen** is a desktop application built with Electron for generating strong passwords in a simple and customizable way.
 
-In addition to random password generation, PassGen can create variations from a word or base password and suggest related words based on topics you are interested in.
+In addition to random password generation, the application can create variations from a word or base password and find references related to topics of interest to use as a starting point.
 
-The goal is to combine password security, customization, and privacy in a simple interface.
+The project's goal is to keep password generation and transformation on the user's device, using external services only when needed for topic-based references.
 
-✨ Features
-🎲 Random Password Generator
+---
 
-Generate random passwords with customizable options:
+## ✨ Features
 
-Length from 5 to 24 characters
-Uppercase letters
-Lowercase letters
-Numbers
-Symbols
-Password strength indicator
-🔄 Password Variations
+### 🎲 Password Generation
 
-Start with a word or base password and generate multiple variations using transformations such as:
+- Passwords from **5 to 24 characters**
+- Lowercase letters
+- Uppercase letters
+- Numbers
+- Symbols
+- Selectable character types
+- Password strength indicator
+- Generation using `crypto.getRandomValues()`
+- Copy password button
+- Quick new-password generation
 
-Uppercase and lowercase variations
-Leet-speak substitutions
-Symbol insertion
-Different combinations of the original word
+### 🔄 Password and Word Variations
 
-These transformations are processed locally.
+You can provide a word or base password to generate different variations.
 
-💡 Topic-Based References
+Transformations include:
 
-Enter a topic you are interested in and PassGen can suggest related words that can be used as a starting point for password variations.
+- Uppercase and lowercase variations
+- **Leet speak** substitutions
+- Numbers
+- Symbols
+- Different character combinations
 
-For example:
+Exemplo:
 
-Topic: Space
-
-Possible references:
-- Galaxy
-- Nebula
-- Apollo
-- Saturn
-- Cosmos
-
-These words can then be used as a basis for generating password variations.
-
-🌙 Dark Mode
-
-PassGen includes a dark mode and remembers your preference between sessions.
-
-🔒 Local Processing
-
-The core password generation and local variation features are processed directly on the user's device.
-
-Generated passwords do not need to be sent to a remote server.
-
-Important: topic-based suggestions may use external APIs or AI services depending on the configured provider. This feature should therefore be considered separately from the fully local password-generation functionality.
-
-🧠 How It Works
-
-PassGen has two main approaches to password generation.
-
-Random Generation
-
-The application generates passwords using the character sets selected by the user:
-
-Uppercase
-Lowercase
-Numbers
-Symbols
-
-The user controls the desired password length and character types.
-
-Base Password Variations
-
-The user can provide a word or password and generate variations from it.
-
-For example:
-
+```text
 Base:
 Dragon
 
-Variations:
+Possíveis variações:
 Dr4g0n!
 DRAGON#24
 dr4g0n$
 DraG0n@7
+```
 
-The goal is to provide different combinations while keeping the original theme recognizable.
+> Variations are processed locally by the application.
 
-🌐 Topic-Based References
+### 💡 Topic-Based References
 
-The topic-reference feature can retrieve related words using external sources.
+Users can enter a topic, name, or interest and receive related words that can be used as a basis for generating variations.
 
-Depending on the configured implementation, it can use:
+Exemplo:
 
-AI-based suggestions
-Wikipedia
-MuseData
-Artifact API
+```text
+Tema:
+Space
 
-This feature is intended to help users find words related to a subject they like before generating password variations.
+Referências:
+Galaxy
+Nebula
+Apollo
+Saturn
+Cosmos
+```
 
-Privacy Consideration
+The feature has multiple reference sources and uses the following fallback order:
 
-Unlike the local password generator, topic-based suggestions may require sending the topic entered by the user to an external service.
+1. Claude/Artifact, when available
+2. Wikipedia
+3. Datamuse
+4. Anthropic API, if a personal API key is configured
+5. Built-in local topic database when no connection is available
 
-No password should be sent to these services as part of the local password-generation workflow.
+### 🌙 Dark Mode
 
-🖥️ Application
+PassGen supports both light and dark modes.
 
-PassGen is designed as a desktop application with a simple and straightforward interface.
+The selected preference is saved locally and restored on the next launch.
 
-Main workflow
-Choose password settings
-        ↓
-Generate password
-        ↓
-Check password strength
-        ↓
-Copy / use the generated password
+### 📋 Copy Password
 
-Or:
+Generated passwords can be copied directly from the interface for easy use in other applications and services.
 
-Enter a topic or base word
-        ↓
-Find related references
-        ↓
-Generate variations
-        ↓
-Choose a password
-🛠️ Technologies
+---
 
-The project currently uses a web-based application structure packaged as a desktop application.
+# 🛠️ Technologies
 
-Main project files include:
+The project uses:
 
-PassGen/
-├── .github/
-│   └── workflows/
-├── app/
-├── index.html
-├── main.js
-├── package.json
-└── README.md
-🚀 Getting Started
-Requirements
+- **Electron** — desktop application
+- **JavaScript** — application logic
+- **HTML5** — interface structure
+- **CSS3** — styling
+- **Node.js / npm** — project and dependency management
+- **Run Electron Builder** — application packaging
+- **Web Crypto API** — cryptographically secure random number generation
+- **LocalStorage** — local preference storage and, optionally, Anthropic API key storage
+- **Wikipedia API** — topic references
+- **Datamuse API** — related-word references
+- **Anthropic API** — advanced references using a user-provided API key
 
-Make sure you have the project's required runtime and dependencies installed.
+---
+
+# 📋 Requirements
+
+To run the project from source, you need:
+
+### Node.js
+
+Using **Node.js 20** is recommended, and it is also the version used by the project's automated build workflow.
+
+The project uses:
+
+- Electron `^31.0.0`
+- Run Electron Builder `^24.13.3`
+
+Check your installation:
+
+```bash
+node --version
+npm --version
+```
+
+---
+
+# 📥 Installation
 
 Clone the repository:
 
+```bash
 git clone https://github.com/Exgrex/PassGen.git
+```
 
 Enter the project directory:
 
+```bash
 cd PassGen
+```
 
-Install dependencies:
+Install the dependencies:
 
+```bash
 npm install
+```
 
-Then start the application using the development command defined in package.json.
+---
 
+# ▶️ Running the Application
+
+To start PassGen in development mode:
+
+```bash
 npm start
+```
 
-The exact command may vary depending on the scripts configured in package.json.
+This command runs:
 
-🔐 Security & Privacy
+```bash
+electron .
+```
 
-PassGen was designed around the idea that password generation should be possible without unnecessarily sending password data to external services.
+The application will open in its own desktop window.
 
-Local features
+---
 
-The following operations are designed to run locally:
+# 📦 Building the Installer
 
-Random password generation
-Password variation generation
-Leet-speak transformations
-Character substitutions
-Password strength calculation
-Dark-mode preference
-External features
+The project uses **Run Electron Builder** to generate distributable builds.
 
-Topic-based reference suggestions may communicate with external services depending on the selected provider.
+Run:
 
-For this reason:
+```bash
+npm run build
+```
 
-Never enter an existing real password into the topic/reference feature.
+O comando executa:
 
-For maximum security, generated passwords should also be stored using a reputable password manager rather than reused across multiple services.
+```bash
+electron-builder
+```
 
-📌 Project Status
+Distribution files are generated in:
 
-PassGen is an ongoing personal development project.
+```text
+dist/
+```
 
-Current functionality includes:
+## Supported Platforms
 
-Random password generation
+A configuração do Run Electron Builder possui alvos para:
 
-Password length control
+| Platform | Format |
+|---|---|
+| Windows | `.exe` / NSIS |
+| macOS | `.dmg` |
+| Linux | `.AppImage` |
 
-Character-type selection
+To specifically build the Windows version:
 
-Password strength indicator
+```bash
+npm run build -- --win --publish=never
+```
 
-Dark mode
+---
 
-Local password variations
+# 📁 Project Structure
 
-Topic-based references
+The main project structure is:
 
-External reference providers
+```text
+PassGen/
+│
+├── app/
+│   └── index.html
+│
+├── main.js
+├── index.html
+├── package.json
+├── build.yml
+└── README.md
+```
 
-Future improvements may include:
+### `app/index.html`
 
-Additional password-generation options
+This is the main application interface file.
 
-More variation algorithms
+It contains:
 
-Improved password-strength analysis
+- Interface HTML
+- CSS
+- Application JavaScript
+- Password generator
+- Strength indicator
+- Dark mode
+- Variation system
+- Topic-based references
+- API integrations
 
-Additional reference providers
+### `main.js`
 
-UI/UX improvements
+This is the Electron main process.
 
-Automated testing
+It is responsible for:
 
-Production releases
+- Creating the application window
+- Defining initial and minimum window sizes
+- Loading `app/index.html`
+- Configuring the Electron security environment
+- Disabling hardware acceleration to work around white-screen issues on some machines
+- Opening DevTools with `F12` or `Ctrl + Shift + I`
+- Handling loading failures
+- Managing the application lifecycle
 
-🎯 Motivation
+The window is created with:
 
-PassGen was created as a practical project to explore desktop application development, password generation, local processing, APIs, and privacy-oriented software design.
+```text
+Initial width: 620px
+Initial height: 840px
 
-The project also serves as an opportunity to experiment with integrating external information sources while keeping the core password-generation workflow local.
+Minimum width: 380px
+Minimum height: 600px
+```
 
-📄 License
+### `index.html`
 
-This project is currently available on GitHub as a public repository.
+Contains a copy/version of the HTML interface in the project root.
 
-See the repository for the current licensing information.
+The desktop application currently loaded by Electron uses:
 
-👤 Author
+```text
+app/index.html
+```
 
-Developed by Exgrex.
+### `package.json`
+
+It contains:
+
+- Project metadata
+- Scripts
+- Dependencies
+- Run Electron Builder configuration
+- Installer configuration for Windows, macOS, and Linux
+
+Main scripts:
+
+```bash
+npm start
+npm run build
+```
+
+### `build.yml`
+
+Configuration file used for the automated build process.
+
+The workflow uses a Windows runner, installs Node.js 20, installs dependencies, and generates the `.exe` installer.
+
+---
+
+# 🧠 How the Generator Works
+
+PassGen uses separate character sets:
+
+```text
+Minúsculas:
+abcdefghijklmnopqrstuvwxyz
+
+Maiúsculas:
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+Números:
+0123456789
+
+Símbolos:
+!@#$%^&*()-_=+[]{}?
+```
+
+Users can choose which character sets to use and define the password length.
+
+The application ensures that at least one character from each selected category is included.
+
+The remaining characters are then selected randomly and the password is shuffled using Fisher-Yates.
+
+---
+
+# 🔐 Random Generation
+
+PassGen uses the following to obtain random values:
+
+```javascript
+crypto.getRandomValues()
+```
+
+Instead of relying on `Math.random()`, the application uses the Web Crypto API available in the browser/Electron environment.
+
+The goal is to provide a suitable source of randomness for password generation.
+
+---
+
+# 📊 Strength Indicator
+
+The application estimates password strength based on password length and the detected character set.
+
+The displayed categories are:
+
+```text
+Very weak
+Weak
+Good
+Very strong
+```
+
+The estimate uses an entropy approximation:
+
+```text
+entropia ≈ tamanho × log2(tamanho do conjunto de caracteres)
+```
+
+> The indicator is an estimate intended to guide the user. It does not replace a complete security audit or compromised-password analysis.
+
+---
+
+# 🌐 Topic-Based References
+
+The topic-based reference feature is designed to work with multiple sources.
+
+## 1. Claude / Artifact
+
+When the application is running in an environment compatible with `claude.use('sample')`, PassGen can request topic-related words from Claude.
+
+## 2. Wikipedia
+
+When the previous option is unavailable, the application queries Wikipedia for a related article and uses categories and links from that article as a source of related words.
+
+## 3. Datamuse
+
+If Wikipedia returns no results, the application queries the Datamuse API for semantically related words.
+
+## 4. Anthropic API
+
+Users can provide their own Anthropic API key in **Advanced Options**.
+
+The key is stored in the device's `localStorage` and sent directly to the Anthropic API when this option is used.
+
+> Using the Anthropic API may incur charges on the user's account according to Anthropic's terms.
+
+## 5. Local Fallback
+
+If external sources are unavailable, PassGen has a built-in database of popular topics.
+
+This allows some topics to continue working even without an internet connection.
+
+---
+
+# 🔒 Privacy
+
+PassGen is designed to keep password generation and transformation local.
+
+### Processed Locally
+
+- Random password generation
+- Word variations
+- Leet speak substitutions
+- Uppercase/lowercase transformations
+- Strength indicator
+- Dark mode
+- Local preferences
+
+### May Use External Connections
+
+The topic-based reference feature may access:
+
+- Claude/Artifact
+- Wikipedia
+- Datamuse
+- Anthropic API
+
+The **searched topic** may be sent to the external service being used.
+
+### ⚠️ Important
+
+**Never enter a real password as a topic or search term.**
+
+The topic-based reference feature should be used for subjects, interests, or generic words—not to submit existing passwords.
+
+---
+
+# 🔑 Anthropic API Key
+
+The optional Anthropic integration can provide references for more specific topics.
+
+The key can be added under:
+
+```text
+Topic-Based References
+└── Advanced Options
+```
+
+It is stored locally using:
+
+```javascript
+localStorage
+```
+
+The key is not sent to the PassGen developer; when used, the request is made directly to the Anthropic API.
+
+> However, storing an API key in local storage within a desktop application has risks. Use this feature only if you understand those risks and the API's terms of use.
+
+---
+
+# 🖥️ Electron Configuration
+
+The application uses several settings to improve window compatibility and security.
+
+```javascript
+contextIsolation: true
+nodeIntegration: false
+```
+
+These settings prevent Node.js APIs from being directly exposed to the interface content.
+
+The application also disables hardware acceleration:
+
+```javascript
+app.disableHardwareAcceleration();
+```
+
+This was included to prevent white-screen issues related to GPU acceleration on some machines.
+
+---
+
+# 🐛 Development and Debugging
+
+During development, DevTools can be opened using:
+
+```text
+F12
+```
+
+or:
+
+```text
+Ctrl + Shift + I
+```
+
+This allows you to inspect:
+
+- JavaScript errors
+- Loading errors
+- Network requests
+- Console
+- Interface elements
+
+The Electron main process also logs loading failures to the console.
+
+---
+
+# 🤖 Automated Build
+
+The project includes a Windows build configuration using GitHub Actions.
+
+The workflow performs:
+
+```text
+Checkout the code
+        ↓
+Install Node.js 20
+        ↓
+npm install
+        ↓
+Run Electron Builder
+        ↓
+Generate the Windows installer (.exe)
+        ↓
+Upload the artifact
+```
+
+O instalador pode ser disponibilizado como um artefato do GitHub Actions.
+
+> To use GitHub Actions, the workflow file must be located inside `.github/workflows/`.
+
+---
+
+# 📌 Project Status
+
+**Current version: 1.0.0**
+
+### Implemented
+
+- [x] Geração de senhas aleatórias
+- [x] Comprimento de 5 a 24 caracteres
+- [x] Letras maiúsculas
+- [x] Letras minúsculas
+- [x] Números
+- [x] Símbolos
+- [x] Indicador de força
+- [x] Copiar senha
+- [x] Variação de palavras
+- [x] Leet speak
+- [x] Topic-Based References
+- [x] Fallback para Wikipedia
+- [x] Fallback para Datamuse
+- [x] Fallback para base local
+- [x] Integração opcional com Anthropic
+- [x] Modo escuro
+- [x] Persistência da preferência de tema
+- [x] Build para Windows
+- [x] Configuração de build para macOS
+- [x] Configuração de build para Linux
+
+### Possible Improvements
+
+- [ ] Add automated tests
+- [ ] Improve password strength analysis
+- [ ] Add more generation options
+- [ ] Add more variation methods
+- [ ] Improve the interface
+- [ ] Add official releases
+- [ ] Add a custom application icon
+- [ ] Improve the update system
+- [ ] Add contribution documentation
+
+---
+
+# 🚀 Roadmap
+
+### Security
+
+- Continuously review the random generation system
+- Improve strength analysis
+- Evaluate safer options for API key storage
+
+### Interface
+
+- Improve visual feedback
+- Add new customization options
+- Improve accessibility
+
+### Integrations
+
+- Add new reference providers
+- Allow users to choose the reference source
+- Improve connection error handling
+
+### Distribution
+
+- Publish Windows releases
+- Publish Linux releases
+- Publish macOS releases
+
+---
+
+# 📄 License
+
+This project is licensed under the **MIT** License.
+
+See the repository license file for the complete terms.
+
+---
+
+# 👨‍💻 Author
+
+Developed by **Exgrex**.
 
 GitHub:
+
 https://github.com/Exgrex
 
-Project:
+Repository:
+
 https://github.com/Exgrex/PassGen
-
-
-
