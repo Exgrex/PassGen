@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cofre — Gerador de Senhas</title>
+<title>PassGen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -161,7 +161,7 @@
   .section-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .section-note { font-size: 13px; color: var(--ink-dim); margin: 0 0 16px; line-height: 1.5; }
 
-  input[type=text] {
+  input[type=text], input[type=password] {
     width: 100%;
     background: var(--panel-2);
     border: 1px solid var(--line);
@@ -172,7 +172,7 @@
     font-size: 14px;
     margin-bottom: 12px;
   }
-  input[type=text]:focus, button:focus-visible, .icon-btn:focus-visible {
+  input[type=text]:focus, input[type=password]:focus, button:focus-visible, .icon-btn:focus-visible {
     outline: 2px solid var(--teal); outline-offset: 2px;
   }
 
@@ -211,8 +211,8 @@
 <div class="wrap">
   <header>
     <div class="header-text">
-      <div class="mark">COFRE</div>
-      <h1>Gerador de senhas</h1>
+      <div class="mark">GERADOR DE SENHAS</div>
+      <h1>PassGen</h1>
       <p class="sub">Senhas aleatórias geradas no seu navegador — nada é enviado pela rede.</p>
     </div>
     <button class="theme-toggle" id="themeToggle" title="Alternar modo escuro">🌙</button>
@@ -249,15 +249,29 @@
   <div class="card">
     <p class="section-title">Referências por tema</p>
     <p class="section-note">
-      Digite um tema, nome ou interesse — não sua senha. O app pergunta a um modelo de IA
-      (não é uma busca ao vivo no Google, é conhecimento do modelo) por palavras associadas:
-      apelidos, símbolos, termos de fã-clube. Nada disso é gravado, só aparece aqui pra você usar.
-      Se não houver conexão disponível, o app avisa em vez de travar.
+      Digite um tema, nome ou interesse — não sua senha. No Artifact do claude.ai,
+      pergunta ao Claude; fora dele (app de desktop, HTML local), busca na
+      Wikipédia e na Datamuse — ambas gratuitas, sem chave — e opcionalmente na
+      sua própria chave da Anthropic (veja "opções avançadas"). Sem internet, cai
+      numa base de temas populares embutida no app.
     </p>
     <input type="text" id="topicInput" placeholder="escreva um tema ou algo que você goste bastante" maxlength="60">
     <button class="secondary" id="topicBtn">Buscar referências</button>
     <div id="topicStatus" class="strength-label" style="margin-top:10px;"></div>
     <div class="variants" id="topicOut"></div>
+
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer; font-size:13px; color:var(--ink-dim);">opções avançadas</summary>
+      <p class="section-note" style="margin-top:10px;">
+        Uma chave da Anthropic (console.anthropic.com) dá resultados melhores pra
+        temas bem específicos. Fica salva só no seu dispositivo, é enviada direto
+        pra Anthropic — nunca passa por nós. Uso tem custo, cobrado pela Anthropic
+        na sua conta.
+      </p>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." maxlength="200">
+      <button class="secondary" id="apiKeySave">Salvar chave</button>
+      <div id="apiKeyStatus" class="strength-label" style="margin-top:8px;"></div>
+    </details>
   </div>
 
   <div class="card">
@@ -451,7 +465,81 @@ doGenerate();
   });
 })();
 
-// --- Referências por tema (capacidade "sample": pergunta a um modelo de IA) ---
+// --- Base local de temas (offline, sem internet) ---
+const LOCAL_TOPICS = {
+  "bts":["bangtan","army","dynamite","butter","jimin","jungkook","taehyung","namjoon"],
+  "blackpink":["jisoo","jennie","rose","lisa","yg","ddu","pink"],
+  "twice":["once","nayeon","sana","momo","tzuyu","fancy"],
+  "newjeans":["bunnies","hanni","danielle","haerin","minji","ador"],
+  "stray kids":["skz","stay","bangchan","felix","hyunjin","chk"],
+  "seventeen":["carat","svt","hoshi","mingyu","woozi"],
+  "exo":["exol","baekhyun","chanyeol","kai","suho"],
+  "ateez":["atiny","hongjoong","seonghwa","wooyoung"],
+  "kpop":["idol","bias","comeback","fandom","debut","stan"],
+  "taylor swift":["swiftie","eras","lover","folklore","cardigan"],
+  "billie eilish":["ocean","bellyache","happier","bad guy"],
+  "hoshimachi suisei":["comet","hololive","vtuber","stardust","suisui"],
+  "hololive":["oshi","vtuber","towa","marine","gura","superchat"],
+  "vtuber":["oshi","stream","superchat","rigging","model3d"],
+  "naruto":["hokage","shinobi","konoha","sasuke","sakura","kunai"],
+  "one piece":["luffy","strawhat","zoro","nakama","grandline"],
+  "attack on titan":["eren","titan","survey","mikasa","wall"],
+  "demon slayer":["tanjiro","nezuko","hashira","breathing"],
+  "jujutsu kaisen":["gojo","itadori","cursed","sukuna","jjk"],
+  "my hero academia":["deku","allmight","quirk","ua","bakugo"],
+  "dragon ball":["goku","saiyan","kamehameha","vegeta"],
+  "sailor moon":["usagi","moonlight","guardian","luna"],
+  "studio ghibli":["totoro","spirited","howl","miyazaki"],
+  "pokemon":["pikachu","trainer","gotta","catch","poke"],
+  "minecraft":["creeper","diamond","crafting","steve","redstone"],
+  "fortnite":["battle","royale","victory","llama","storm"],
+  "league of legends":["summoner","rift","nexus","lol","penta"],
+  "valorant":["agent","spike","clutch","ace"],
+  "zelda":["hyrule","link","triforce","hero","master"],
+  "genshin impact":["traveler","teyvat","primogem","archon"],
+  "among us":["impostor","crewmate","vent","sus","task"],
+  "roblox":["robux","noob","avatar","blox"],
+  "gta":["vice","liberty","heist","wasted"],
+  "marvel":["avenger","stark","hero","infinity","shield"],
+  "star wars":["jedi","force","skywalker","droid","saber"],
+  "harry potter":["hogwarts","wizard","wand","quidditch","muggle"],
+  "stranger things":["hawkins","upside","eleven","demogorgon"],
+  "disney":["magic","castle","princess","pixar"],
+  "futebol":["gol","craque","torcida","camisa","estadio"],
+  "formula 1":["pole","podio","boxes","piloto","grid"],
+  "sol":["astro","raio","calor","luz","verao","dourado"],
+  "lua":["luar","crescente","noite","satelite","prata"],
+  "mar":["onda","praia","sal","azul","mare","oceano"],
+  "floresta":["verde","trilha","folhas","selva","natureza"],
+  "montanha":["pico","trilha","altitude","rocha","cume"],
+  "cafe":["expresso","aroma","xicara","grao","cafeina"],
+  "gato":["felino","miau","bigode","pata","ronronar"],
+  "cachorro":["latido","fiel","pata","rex","amigo"],
+  "viagem":["mala","destino","passagem","roteiro","aventura"],
+  "inverno":["frio","neve","cobertor","gelo"],
+  "verao":["calor","praia","sol","ferias"],
+  "estrelas":["constelacao","brilho","noite","galaxia","cosmos"]
+};
+
+function normalizeTopic(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+function findLocalTopic(topic) {
+  const norm = normalizeTopic(topic);
+  if (LOCAL_TOPICS[norm]) return LOCAL_TOPICS[norm];
+  const keys = Object.keys(LOCAL_TOPICS);
+  const match = keys.find(k => norm.includes(k) || k.includes(norm));
+  return match ? LOCAL_TOPICS[match] : null;
+}
+
+// --- Referências por tema ---
+// Ordem de tentativa: 0) base local embutida (sem internet) 1) capacidade
+// "sample" (só existe dentro do Artifact do claude.ai) 2) Datamuse, API
+// pública e gratuita de associação de palavras
+// (funciona fora do Artifact, ex: app de desktop) 3) chave própria da
+// Anthropic, se o usuário salvou uma.
+
 let sampleFn = null;
 let sampleChecked = false;
 
@@ -466,6 +554,120 @@ async function getSample() {
   return sampleFn;
 }
 
+function getApiKey() {
+  try { return localStorage.getItem('cofre-anthropic-key') || ''; } catch (e) { return ''; }
+}
+
+async function fetchViaSample(topic) {
+  const sample = await getSample();
+  if (typeof claude === 'undefined' || !sample) return null;
+  const result = await sample.json(
+    `Tema/interesse: "${topic}". Liste de 6 a 10 palavras curtas associadas a esse tema ` +
+    `(apelidos, termos relacionados, conceitos, símbolos, gírias de fã-clube, traduções). ` +
+    `Cada item deve ser uma única palavra, sem espaços, sem acentos, minúscula, boa para compor uma senha. ` +
+    `Responda APENAS com um array JSON de strings, nada mais.`,
+    { modelTier: 'quick' }
+  );
+  return Array.isArray(result) ? result.filter(w => typeof w === 'string' && w.trim()) : [];
+}
+
+async function fetchViaDatamuse(topic) {
+  const res = await fetch('https://api.datamuse.com/words?ml=' + encodeURIComponent(topic) + '&max=10');
+  if (!res.ok) throw new Error('datamuse_error');
+  const data = await res.json();
+  return Array.isArray(data) ? data.map(item => item.word).filter(Boolean) : [];
+}
+
+const STOPWORDS = new Set(['de','da','do','das','dos','em','com','para','por','uma','um','os','as',
+  'the','and','for','with','from','this','that','was','are','its','his','her','their']);
+
+async function fetchViaWikipedia(topic) {
+  // 1) acha o artigo mais próximo do tema digitado
+  const searchRes = await fetch('https://pt.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=1&search=' + encodeURIComponent(topic));
+  if (!searchRes.ok) throw new Error('wiki_search_error');
+  const searchData = await searchRes.json();
+  const title = searchData[1] && searchData[1][0];
+  if (!title) return [];
+
+  // 2) pega categorias e links do artigo — são a fonte das palavras relacionadas
+  const infoRes = await fetch('https://pt.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=categories|links&pllimit=30&cllimit=20&titles=' + encodeURIComponent(title));
+  if (!infoRes.ok) throw new Error('wiki_info_error');
+  const infoData = await infoRes.json();
+  const pages = infoData.query && infoData.query.pages;
+  if (!pages) return [];
+  const page = Object.values(pages)[0];
+  const raw = [];
+  (page.categories || []).forEach(c => raw.push(c.title.replace('Categoria:', '')));
+  (page.links || []).forEach(l => raw.push(l.title));
+
+  const topicNorm = normalizeTopic(topic);
+  const words = raw
+    .filter(t => !t.includes(':'))
+    .flatMap(t => t.split(/\s+/))
+    .map(w => normalizeTopic(w).replace(/[^a-z0-9]/g, ''))
+    .filter(w => w.length >= 3 && w.length <= 16)
+    .filter(w => w !== topicNorm && !STOPWORDS.has(w));
+
+  return [...new Set(words)].slice(0, 8);
+}
+
+async function fetchViaAnthropicKey(topic, apiKey) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: `Tema/interesse: "${topic}". Liste de 6 a 10 palavras curtas associadas a esse tema ` +
+          `(apelidos, termos relacionados, conceitos, símbolos, gírias de fã-clube, traduções). ` +
+          `Cada item deve ser uma única palavra, sem espaços, sem acentos, minúscula, boa para compor uma senha. ` +
+          `Responda APENAS com um array JSON de strings, nada mais, sem markdown.`
+      }]
+    })
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw { code: 'invalid_key' };
+    throw new Error('anthropic_error');
+  }
+  const data = await res.json();
+  const text = (data.content || []).map(b => b.text || '').join('').trim();
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
+  return Array.isArray(parsed) ? parsed.filter(w => typeof w === 'string' && w.trim()) : [];
+}
+
+function renderTopicWords(words, status, out) {
+  const cleanWords = words.map(w => w.trim().toLowerCase().replace(/\s+/g, '')).filter(Boolean);
+  if (!cleanWords.length) {
+    status.textContent = 'Não encontrei referências para esse tema. Tente outro termo.';
+    return;
+  }
+  status.textContent = 'toque em uma palavra para gerar senhas a partir dela:';
+  cleanWords.forEach(clean => {
+    const row = document.createElement('div');
+    row.className = 'variant';
+    const span = document.createElement('span');
+    span.textContent = clean;
+    const btn = document.createElement('button');
+    btn.textContent = 'gerar senhas';
+    btn.addEventListener('click', () => {
+      document.getElementById('baseWord').value = clean;
+      showVariants([clean], 'variantsOut');
+      document.getElementById('variantsOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    row.appendChild(span);
+    row.appendChild(btn);
+    out.appendChild(row);
+  });
+}
+
 document.getElementById('topicBtn').addEventListener('click', async () => {
   const topic = document.getElementById('topicInput').value.trim();
   const status = document.getElementById('topicStatus');
@@ -475,59 +677,92 @@ document.getElementById('topicBtn').addEventListener('click', async () => {
 
   status.textContent = 'buscando referências...';
 
-  let sample;
+  // 1) capacidade "sample" do Artifact (claude.ai)
   try {
-    sample = await getSample();
-  } catch (e) {
-    sample = null;
-  }
-
-  if (typeof claude === 'undefined' || !sample) {
-    status.textContent = 'Sem conexão disponível com a IA agora — essa feature precisa dela para funcionar. Tente novamente mais tarde ou use variações manuais abaixo.';
-    return;
-  }
-
-  try {
-    const result = await sample.json(
-      `Tema/interesse: "${topic}". Liste de 6 a 10 palavras curtas associadas a esse tema ` +
-      `(apelidos, termos relacionados, conceitos, símbolos, gírias de fã-clube, traduções). ` +
-      `Cada item deve ser uma única palavra, sem espaços, sem acentos, minúscula, boa para compor uma senha. ` +
-      `Responda APENAS com um array JSON de strings, nada mais.`,
-      { modelTier: 'quick' }
-    );
-    const words = Array.isArray(result) ? result.filter(w => typeof w === 'string' && w.trim()) : [];
-    if (!words.length) {
-      status.textContent = 'Não encontrei referências para esse tema. Tente outro termo.';
+    const words = await fetchViaSample(topic);
+    if (words !== null) {
+      renderTopicWords(words, status, out);
       return;
     }
-    status.textContent = 'toque em uma palavra para gerar senhas a partir dela:';
-    const cleanWords = words.map(w => w.trim().toLowerCase().replace(/\s+/g, '')).filter(Boolean);
-    cleanWords.forEach(clean => {
-      const row = document.createElement('div');
-      row.className = 'variant';
-      const span = document.createElement('span');
-      span.textContent = clean;
-      const btn = document.createElement('button');
-      btn.textContent = 'gerar senhas';
-      btn.addEventListener('click', () => {
-        document.getElementById('baseWord').value = clean;
-        showVariants([clean], 'variantsOut');
-        document.getElementById('variantsOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-      row.appendChild(span);
-      row.appendChild(btn);
-      out.appendChild(row);
-    });
   } catch (e) {
     if (e && e.code === 'not_granted') {
       status.textContent = 'Você precisa permitir o acesso à IA para usar essa feature.';
-    } else if (e && e.code === 'rate_limited') {
+      return;
+    }
+    if (e && e.code === 'rate_limited') {
       status.textContent = 'Muitas tentativas — espere um pouco e tente de novo.';
-    } else {
-      status.textContent = 'Sem conexão disponível com a IA agora — essa feature precisa dela para funcionar. Tente novamente mais tarde ou use variações manuais abaixo.';
+      return;
+    }
+    // qualquer outro erro: segue para as próximas fontes
+  }
+
+  // 2) Wikipédia (gratuita, sem chave, boa pra nomes próprios e temas específicos)
+  try {
+    const words = await fetchViaWikipedia(topic);
+    if (words.length) {
+      renderTopicWords(words, status, out);
+      return;
+    }
+  } catch (e) { /* sem internet, ou artigo não encontrado: segue */ }
+
+  // 3) Datamuse (gratuita, boa pra palavras comuns do dia a dia)
+  try {
+    const words = await fetchViaDatamuse(topic);
+    if (words.length) {
+      renderTopicWords(words, status, out);
+      return;
+    }
+  } catch (e) { /* sem internet, ou fora de um ambiente que permite isso: segue */ }
+
+  // 4) chave própria da Anthropic, se salva
+  const apiKey = getApiKey();
+  if (apiKey) {
+    try {
+      status.textContent = 'buscando com a sua chave da Anthropic...';
+      const words = await fetchViaAnthropicKey(topic, apiKey);
+      renderTopicWords(words, status, out);
+      return;
+    } catch (e) {
+      if (e && e.code === 'invalid_key') {
+        status.textContent = 'Sua chave da Anthropic parece inválida. Confira em "opções avançadas".';
+        return;
+      }
     }
   }
+
+  // 5) base local embutida — só entra se nada acima funcionou (ex: sem internet)
+  const localWords = findLocalTopic(topic);
+  if (localWords) {
+    status.textContent = 'sem conexão — usando base local embutida:';
+    renderTopicWords(localWords, status, out);
+    return;
+  }
+
+  status.textContent = 'Sem conexão disponível e esse tema não está na base local. Tente novamente mais tarde ou use variações manuais abaixo.';
 });
+
+document.getElementById('apiKeySave').addEventListener('click', () => {
+  const input = document.getElementById('apiKeyInput');
+  const status = document.getElementById('apiKeyStatus');
+  const key = input.value.trim();
+  try {
+    if (key) {
+      localStorage.setItem('cofre-anthropic-key', key);
+      status.textContent = 'Chave salva neste dispositivo.';
+    } else {
+      localStorage.removeItem('cofre-anthropic-key');
+      status.textContent = 'Chave removida.';
+    }
+    input.value = '';
+  } catch (e) {
+    status.textContent = 'Não foi possível salvar (armazenamento local indisponível).';
+  }
+});
+
+(function loadApiKeyStatus() {
+  const status = document.getElementById('apiKeyStatus');
+  if (getApiKey()) status.textContent = 'Uma chave já está salva neste dispositivo.';
+})();
 </script>
 </body>
 </html>

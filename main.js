@@ -11,7 +11,7 @@ function createWindow() {
     height: 840,
     minWidth: 380,
     minHeight: 600,
-    title: 'Cofre — Gerador de Senhas',
+    title: 'PassGen',
     backgroundColor: '#eef6fc',
     show: false,
     webPreferences: {

@@ -1,7 +1,7 @@
 {
-  "name": "cofre-gerador-senhas",
+  "name": "passgen",
   "version": "1.0.0",
-  "description": "Gerador de senhas local, com variações e referências por tema",
+  "description": "PassGen — gerador de senhas local, com variações e referências por tema",
   "main": "main.js",
   "author": "",
   "license": "MIT",
@@ -14,8 +14,8 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.cofre.geradorsenhas",
-    "productName": "Cofre - Gerador de Senhas",
+    "appId": "com.passgen.app",
+    "productName": "PassGen",
     "asar": false,
     "files": [
       "main.js",
