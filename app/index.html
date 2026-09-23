@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cofre — Gerador de Senhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef6fc;
+    --panel: #ffffff;
+    --panel-2: #f2f8fd;
+    --line: #cfe3f2;
+    --ink: #16283d;
+    --ink-dim: #5b7690;
+    --brass: #2f7fd1;
+    --brass-dim: #a9c9e8;
+    --teal: #1f9e82;
+    --danger: #d64f3e;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root[data-theme="dark"] {
+    --bg: #101425;
+    --panel: #171c30;
+    --panel-2: #1f2540;
+    --line: #2c3252;
+    --ink: #e9ecf8;
+    --ink-dim: #9aa1c4;
+    --brass: #5ea8ea;
+    --brass-dim: #3a6489;
+    --teal: #4fc3a1;
+    --danger: #e0654f;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .wrap { width: 100%; max-width: 560px; }
+  header { margin-bottom: 28px; }
+  .mark { color: var(--brass); font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.02em; }
+  h1 { font-size: 26px; margin: 6px 0 4px; font-weight: 700; }
+  p.sub { color: var(--ink-dim); font-size: 14px; margin: 0; line-height: 1.5; max-width: 46ch; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+
+  .output-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 14px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+  }
+  #output {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    flex: 1;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    min-width: 0;
+  }
+  .icon-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s, color .15s;
+  }
+  .icon-btn:hover { border-color: var(--brass); color: var(--brass); }
+  .icon-btn.copied { border-color: var(--teal); color: var(--teal); }
+
+  .strength { display: flex; gap: 4px; margin-bottom: 4px; }
+  .strength span { height: 4px; flex: 1; border-radius: 2px; background: var(--line); }
+  .strength-label { font-size: 12px; color: var(--ink-dim); font-family: 'JetBrains Mono', monospace; }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; color: var(--ink-dim); margin-bottom: 8px;
+  }
+  .field-label b { color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--brass);
+    height: 4px;
+  }
+
+  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+  .check {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: var(--ink); cursor: pointer; user-select: none;
+  }
+  .check input { accent-color: var(--teal); width: 16px; height: 16px; }
+
+  button.primary {
+    width: 100%;
+    background: var(--brass);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background .15s;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .header-text { flex: 1; }
+  .theme-toggle {
+    flex-shrink: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    border-radius: 999px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .theme-toggle:hover { border-color: var(--brass); color: var(--brass); }
+
+  .section-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .section-note { font-size: 13px; color: var(--ink-dim); margin: 0 0 16px; line-height: 1.5; }
+
+  input[type=text], input[type=password] {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 11px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  input[type=text]:focus, input[type=password]:focus, button:focus-visible, .icon-btn:focus-visible {
+    outline: 2px solid var(--teal); outline-offset: 2px;
+  }
+
+  button.secondary {
+    background: none;
+    border: 1px solid var(--brass-dim);
+    color: var(--brass);
+    border-radius: 10px;
+    padding: 11px;
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.secondary:hover { background: rgba(224,164,88,0.08); }
+
+  .variants { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .variant {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  }
+  .variant button {
+    background: none; border: none; color: var(--ink-dim); cursor: pointer; font-size: 13px;
+  }
+  .variant button:hover { color: var(--brass); }
+
+  @media (max-width: 420px) {
+    .checks { grid-template-columns: 1fr; }
+    #output { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="header-text">
+      <div class="mark">COFRE</div>
+      <h1>Gerador de senhas</h1>
+      <p class="sub">Senhas aleatórias geradas no seu navegador — nada é enviado pela rede.</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Alternar modo escuro">🌙</button>
+  </header>
+
+  <div class="card">
+    <div class="output-row">
+      <span id="output">clique em gerar</span>
+      <button class="icon-btn" id="copyBtn" title="Copiar">⧉</button>
+      <button class="icon-btn" id="genBtn" title="Gerar nova">↻</button>
+    </div>
+    <div class="strength" id="strengthBars">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="strength-label" id="strengthLabel">—</div>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <div class="field-label">Comprimento <b id="lenVal">16</b></div>
+      <input type="range" id="lenRange" min="5" max="24" value="16">
+    </div>
+    <div class="field">
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="cLower" checked> minúsculas (a-z)</label>
+        <label class="check"><input type="checkbox" id="cUpper" checked> maiúsculas (A-Z)</label>
+        <label class="check"><input type="checkbox" id="cNum" checked> números (0-9)</label>
+        <label class="check"><input type="checkbox" id="cSym" checked> símbolos (!@#$)</label>
+      </div>
+    </div>
+    <button class="primary" id="genBtn2">Gerar senha</button>
+  </div>
+
+  <div class="card">
+    <p class="section-title">Referências por tema</p>
+    <p class="section-note">
+      Digite um tema, nome ou interesse — não sua senha. No Artifact do claude.ai,
+      pergunta ao Claude; rodando fora dele (app de desktop, HTML local), usa a
+      Datamuse, uma API gratuita de associação de palavras, e opcionalmente sua
+      própria chave da Anthropic (veja "opções avançadas" abaixo). Nada disso é
+      gravado. Se não houver conexão disponível, o app avisa em vez de travar.
+    </p>
+    <input type="text" id="topicInput" placeholder="escreva um tema ou algo que você goste bastante" maxlength="60">
+    <button class="secondary" id="topicBtn">Buscar referências</button>
+    <div id="topicStatus" class="strength-label" style="margin-top:10px;"></div>
+    <div class="variants" id="topicOut"></div>
+
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer; font-size:13px; color:var(--ink-dim);">opções avançadas</summary>
+      <p class="section-note" style="margin-top:10px;">
+        Uma chave da Anthropic (console.anthropic.com) dá resultados melhores pra
+        temas bem específicos. Fica salva só no seu dispositivo, é enviada direto
+        pra Anthropic — nunca passa por nós. Uso tem custo, cobrado pela Anthropic
+        na sua conta.
+      </p>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." maxlength="200">
+      <button class="secondary" id="apiKeySave">Salvar chave</button>
+      <div id="apiKeyStatus" class="strength-label" style="margin-top:8px;"></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <p class="section-title">Variações de uma senha ou palavra</p>
+    <p class="section-note">
+      Essas variações são criadas localmente, aqui no navegador, misturando maiúsculas,
+      números e símbolos parecidos com as letras. Cole aqui palavras suas, ou toque em uma
+      referência encontrada acima para gerar direto a partir dela.
+    </p>
+    <input type="text" id="baseWord" placeholder="ex: sol,casa,tigre" maxlength="120">
+    <button class="secondary" id="varyBtn">Gerar variações</button>
+    <div class="variants" id="variantsOut"></div>
+  </div>
+</div>
+
+<script>
+const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const UPPER = LOWER.toUpperCase();
+const NUM = '0123456789';
+const SYM = '!@#$%^&*()-_=+[]{}?';
+const LEET = {a:'4',e:'3',i:'1',o:'0',s:'5',t:'7',b:'8',g:'9',l:'1'};
+
+function secureRandomInt(max) {
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return arr[0] % max;
+}
+
+function generatePassword(len, useLower, useUpper, useNum, useSym) {
+  let pool = '';
+  const required = [];
+  if (useLower) { pool += LOWER; required.push(LOWER); }
+  if (useUpper) { pool += UPPER; required.push(UPPER); }
+  if (useNum) { pool += NUM; required.push(NUM); }
+  if (useSym) { pool += SYM; required.push(SYM); }
+  if (!pool) return '';
+  let chars = required.map(set => set[secureRandomInt(set.length)]);
+  while (chars.length < len) chars.push(pool[secureRandomInt(pool.length)]);
+  // shuffle (Fisher-Yates, crypto-random)
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = secureRandomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.slice(0, len).join('');
+}
+
+function scoreStrength(pw) {
+  if (!pw) return 0;
+  let poolSize = 0;
+  if (/[a-z]/.test(pw)) poolSize += 26;
+  if (/[A-Z]/.test(pw)) poolSize += 26;
+  if (/[0-9]/.test(pw)) poolSize += 10;
+  if (/[^a-zA-Z0-9]/.test(pw)) poolSize += SYM.length;
+  const entropy = pw.length * Math.log2(poolSize || 1);
+  if (entropy < 40) return 1;
+  if (entropy < 60) return 2;
+  if (entropy < 80) return 3;
+  return 4;
+}
+
+function renderStrength(pw) {
+  const s = scoreStrength(pw);
+  const bars = document.querySelectorAll('#strengthBars span');
+  const colors = ['#e0654f','#e0654f','#e0a458','#4fc3a1'];
+  const labels = ['muito fraca','fraca','boa','muito forte'];
+  bars.forEach((b, i) => { b.style.background = i < s ? colors[s-1] : 'var(--line)'; });
+  document.getElementById('strengthLabel').textContent = pw ? labels[s-1] : '—';
+}
+
+function doGenerate() {
+  const len = parseInt(document.getElementById('lenRange').value, 10);
+  const pw = generatePassword(
+    len,
+    document.getElementById('cLower').checked,
+    document.getElementById('cUpper').checked,
+    document.getElementById('cNum').checked,
+    document.getElementById('cSym').checked
+  );
+  const out = document.getElementById('output');
+  out.textContent = pw || 'selecione ao menos uma opção';
+  renderStrength(pw);
+}
+
+document.getElementById('lenRange').addEventListener('input', e => {
+  document.getElementById('lenVal').textContent = e.target.value;
+});
+document.getElementById('genBtn').addEventListener('click', doGenerate);
+document.getElementById('genBtn2').addEventListener('click', doGenerate);
+
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  const text = document.getElementById('output').textContent;
+  const btn = document.getElementById('copyBtn');
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.classList.add('copied');
+    btn.textContent = '✓';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⧉'; }, 1200);
+  } catch (e) { /* clipboard unavailable */ }
+});
+
+function leetify(word) {
+  return word.split('').map(ch => {
+    const lower = ch.toLowerCase();
+    if (LEET[lower] && secureRandomInt(2) === 0) return LEET[lower];
+    return ch;
+  }).join('');
+}
+
+function randomCase(word) {
+  return word.split('').map(ch =>
+    secureRandomInt(2) === 0 ? ch.toUpperCase() : ch.toLowerCase()
+  ).join('');
+}
+
+function makeVariant(base) {
+  const symPick = SYM[secureRandomInt(SYM.length)];
+  const numPick = String(secureRandomInt(90) + 10);
+  let core = leetify(base);
+  core = core.charAt(0).toUpperCase() + core.slice(1);
+  const style = secureRandomInt(3);
+  if (style === 0) return core + numPick + symPick;
+  if (style === 1) return symPick + core + numPick;
+  return randomCase(core) + symPick + numPick;
+}
+
+function showVariants(words, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  if (!words.length) return;
+  const seen = new Set();
+  let attempts = 0;
+  while (seen.size < 5 && attempts < 30) {
+    attempts++;
+    const source = words[secureRandomInt(words.length)];
+    const v = makeVariant(source);
+    if (!seen.has(v)) seen.add(v);
+  }
+  seen.forEach(v => {
+    const row = document.createElement('div');
+    row.className = 'variant';
+    const span = document.createElement('span');
+    span.textContent = v;
+    const btn = document.createElement('button');
+    btn.textContent = 'usar';
+    btn.addEventListener('click', () => {
+      document.getElementById('output').textContent = v;
+      renderStrength(v);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    row.appendChild(span);
+    row.appendChild(btn);
+    container.appendChild(row);
+  });
+}
+
+document.getElementById('varyBtn').addEventListener('click', () => {
+  const raw = document.getElementById('baseWord').value.trim();
+  if (!raw) return;
+  const words = raw.split(',').map(w => w.trim()).filter(Boolean);
+  showVariants(words.length ? words : [raw], 'variantsOut');
+});
+
+doGenerate();
+
+// --- Modo escuro ---
+(function initTheme() {
+  const toggle = document.getElementById('themeToggle');
+  let saved = null;
+  try { saved = localStorage.getItem('cofre-theme'); } catch (e) { /* sem storage */ }
+  let theme = saved;
+  if (!theme) {
+    theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  applyTheme(theme);
+
+  function applyTheme(t) {
+    if (t === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      toggle.textContent = '☀️';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      toggle.textContent = '🌙';
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem('cofre-theme', next); } catch (e) { /* sem storage */ }
+  });
+})();
+
+// --- Referências por tema ---
+// Ordem de tentativa: 1) capacidade "sample" (só existe dentro do Artifact do
+// claude.ai) 2) Datamuse, API pública e gratuita de associação de palavras
+// (funciona fora do Artifact, ex: app de desktop) 3) chave própria da
+// Anthropic, se o usuário salvou uma.
+
+let sampleFn = null;
+let sampleChecked = false;
+
+async function getSample() {
+  if (sampleChecked) return sampleFn;
+  sampleChecked = true;
+  try {
+    sampleFn = await claude.use('sample');
+  } catch (e) {
+    sampleFn = null;
+  }
+  return sampleFn;
+}
+
+function getApiKey() {
+  try { return localStorage.getItem('cofre-anthropic-key') || ''; } catch (e) { return ''; }
+}
+
+async function fetchViaSample(topic) {
+  const sample = await getSample();
+  if (typeof claude === 'undefined' || !sample) return null;
+  const result = await sample.json(
+    `Tema/interesse: "${topic}". Liste de 6 a 10 palavras curtas associadas a esse tema ` +
+    `(apelidos, termos relacionados, conceitos, símbolos, gírias de fã-clube, traduções). ` +
+    `Cada item deve ser uma única palavra, sem espaços, sem acentos, minúscula, boa para compor uma senha. ` +
+    `Responda APENAS com um array JSON de strings, nada mais.`,
+    { modelTier: 'quick' }
+  );
+  return Array.isArray(result) ? result.filter(w => typeof w === 'string' && w.trim()) : [];
+}
+
+async function fetchViaDatamuse(topic) {
+  const res = await fetch('https://api.datamuse.com/words?ml=' + encodeURIComponent(topic) + '&max=10');
+  if (!res.ok) throw new Error('datamuse_error');
+  const data = await res.json();
+  return Array.isArray(data) ? data.map(item => item.word).filter(Boolean) : [];
+}
+
+async function fetchViaAnthropicKey(topic, apiKey) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: `Tema/interesse: "${topic}". Liste de 6 a 10 palavras curtas associadas a esse tema ` +
+          `(apelidos, termos relacionados, conceitos, símbolos, gírias de fã-clube, traduções). ` +
+          `Cada item deve ser uma única palavra, sem espaços, sem acentos, minúscula, boa para compor uma senha. ` +
+          `Responda APENAS com um array JSON de strings, nada mais, sem markdown.`
+      }]
+    })
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw { code: 'invalid_key' };
+    throw new Error('anthropic_error');
+  }
+  const data = await res.json();
+  const text = (data.content || []).map(b => b.text || '').join('').trim();
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
+  return Array.isArray(parsed) ? parsed.filter(w => typeof w === 'string' && w.trim()) : [];
+}
+
+function renderTopicWords(words, status, out) {
+  const cleanWords = words.map(w => w.trim().toLowerCase().replace(/\s+/g, '')).filter(Boolean);
+  if (!cleanWords.length) {
+    status.textContent = 'Não encontrei referências para esse tema. Tente outro termo.';
+    return;
+  }
+  status.textContent = 'toque em uma palavra para gerar senhas a partir dela:';
+  cleanWords.forEach(clean => {
+    const row = document.createElement('div');
+    row.className = 'variant';
+    const span = document.createElement('span');
+    span.textContent = clean;
+    const btn = document.createElement('button');
+    btn.textContent = 'gerar senhas';
+    btn.addEventListener('click', () => {
+      document.getElementById('baseWord').value = clean;
+      showVariants([clean], 'variantsOut');
+      document.getElementById('variantsOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    row.appendChild(span);
+    row.appendChild(btn);
+    out.appendChild(row);
+  });
+}
+
+document.getElementById('topicBtn').addEventListener('click', async () => {
+  const topic = document.getElementById('topicInput').value.trim();
+  const status = document.getElementById('topicStatus');
+  const out = document.getElementById('topicOut');
+  out.innerHTML = '';
+  if (!topic) { status.textContent = 'digite um tema primeiro'; return; }
+
+  status.textContent = 'buscando referências...';
+
+  // 1) capacidade "sample" do Artifact (claude.ai)
+  try {
+    const words = await fetchViaSample(topic);
+    if (words !== null) {
+      renderTopicWords(words, status, out);
+      return;
+    }
+  } catch (e) {
+    if (e && e.code === 'not_granted') {
+      status.textContent = 'Você precisa permitir o acesso à IA para usar essa feature.';
+      return;
+    }
+    if (e && e.code === 'rate_limited') {
+      status.textContent = 'Muitas tentativas — espere um pouco e tente de novo.';
+      return;
+    }
+    // qualquer outro erro: segue para as próximas fontes
+  }
+
+  // 2) Datamuse (gratuita, funciona fora do Artifact)
+  try {
+    const words = await fetchViaDatamuse(topic);
+    if (words.length) {
+      renderTopicWords(words, status, out);
+      return;
+    }
+  } catch (e) { /* sem internet, ou fora de um ambiente que permite isso: segue */ }
+
+  // 3) chave própria da Anthropic, se salva
+  const apiKey = getApiKey();
+  if (apiKey) {
+    try {
+      status.textContent = 'buscando com a sua chave da Anthropic...';
+      const words = await fetchViaAnthropicKey(topic, apiKey);
+      renderTopicWords(words, status, out);
+      return;
+    } catch (e) {
+      if (e && e.code === 'invalid_key') {
+        status.textContent = 'Sua chave da Anthropic parece inválida. Confira em "opções avançadas".';
+        return;
+      }
+    }
+  }
+
+  status.textContent = 'Sem conexão disponível para essa feature agora. Tente novamente mais tarde ou use variações manuais abaixo.';
+});
+
+document.getElementById('apiKeySave').addEventListener('click', () => {
+  const input = document.getElementById('apiKeyInput');
+  const status = document.getElementById('apiKeyStatus');
+  const key = input.value.trim();
+  try {
+    if (key) {
+      localStorage.setItem('cofre-anthropic-key', key);
+      status.textContent = 'Chave salva neste dispositivo.';
+    } else {
+      localStorage.removeItem('cofre-anthropic-key');
+      status.textContent = 'Chave removida.';
+    }
+    input.value = '';
+  } catch (e) {
+    status.textContent = 'Não foi possível salvar (armazenamento local indisponível).';
+  }
+});
+
+(function loadApiKeyStatus() {
+  const status = document.getElementById('apiKeyStatus');
+  if (getApiKey()) status.textContent = 'Uma chave já está salva neste dispositivo.';
+})();
+</script>
+</body>
+</html>

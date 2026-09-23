@@ -1,0 +1,35 @@
+{
+  "name": "cofre-gerador-senhas",
+  "version": "1.0.0",
+  "description": "Gerador de senhas local, com variações e referências por tema",
+  "main": "main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.cofre.geradorsenhas",
+    "productName": "Cofre - Gerador de Senhas",
+    "asar": false,
+    "files": [
+      "main.js",
+      "app/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
