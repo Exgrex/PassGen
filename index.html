@@ -38,6 +38,7 @@
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
+  html { overflow-x: hidden; }
   body {
     margin: 0;
     background: var(--bg);
@@ -45,12 +46,22 @@
     font-family: 'Space Grotesk', -apple-system, sans-serif;
     display: flex;
     justify-content: center;
-    padding: 32px 16px;
+    padding: 24px 16px;
+    overflow-x: hidden;
+    width: 100%;
   }
-  .wrap { width: 100%; max-width: 560px; }
-  header { margin-bottom: 28px; }
-  .mark { color: var(--brass); font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.02em; }
-  h1 { font-size: 26px; margin: 6px 0 4px; font-weight: 700; }
+
+  /* barra de rolagem mais fina e discreta */
+  html { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--brass-dim); }
+
+  .wrap { width: 100%; max-width: 560px; min-width: 0; }
+  header { margin-bottom: 24px; display: flex; flex-wrap: wrap; row-gap: 12px; }
+  .mark { color: var(--brass); font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.02em; }
+  h1 { font-size: clamp(20px, 6vw, 26px); margin: 6px 0 4px; font-weight: 700; }
   p.sub { color: var(--ink-dim); font-size: 14px; margin: 0; line-height: 1.5; max-width: 46ch; }
 
   .card {
@@ -158,6 +169,26 @@
   }
   .theme-toggle:hover { border-color: var(--brass); color: var(--brass); }
 
+  .header-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .translate-box {
+    display: none;
+    margin: -8px 0 18px;
+    padding: 10px 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .translate-box.open { display: block; }
+  /* o Google injeta seu próprio iframe/estilo aqui dentro; não dá pra controlar 100% */
+  .goog-logo-link, .goog-te-gadget span { display: none !important; }
+  .goog-te-gadget { font-family: 'Space Grotesk', sans-serif !important; font-size: 13px !important; color: var(--ink-dim) !important; }
+  .goog-te-gadget select { max-width: 100%; }
+  .skiptranslate iframe { max-width: 100%; }
+  body.translated-ltr { top: 0 !important; }
+
   .section-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .section-note { font-size: 13px; color: var(--ink-dim); margin: 0 0 16px; line-height: 1.5; }
 
@@ -204,6 +235,14 @@
   @media (max-width: 420px) {
     .checks { grid-template-columns: 1fr; }
     #output { font-size: 15px; }
+    body { padding: 16px 12px; }
+    .card { padding: 16px; }
+    .header-buttons { order: -1; width: 100%; justify-content: flex-end; }
+  }
+
+  @media (max-width: 340px) {
+    .output-row { flex-wrap: wrap; }
+    #output { width: 100%; order: -1; }
   }
 </style>
 </head>
@@ -211,18 +250,24 @@
 <div class="wrap">
   <header>
     <div class="header-text">
-      <div class="mark">GERADOR DE SENHAS</div>
+      <div class="mark" data-en="PASSWORD GENERATOR">GERADOR DE SENHAS</div>
       <h1>PassGen</h1>
-      <p class="sub">Senhas aleatórias geradas no seu navegador — nada é enviado pela rede.</p>
+      <p class="sub" data-en="Random passwords generated in your browser — nothing is sent over the network.">Senhas aleatórias geradas no seu navegador — nada é enviado pela rede.</p>
     </div>
-    <button class="theme-toggle" id="themeToggle" title="Alternar modo escuro">🌙</button>
+    <div class="header-buttons">
+      <button class="theme-toggle" id="langToggle" title="Mudar idioma" data-en-title="Change language">🌐</button>
+      <button class="theme-toggle" id="themeToggle" title="Alternar modo escuro" data-en-title="Toggle dark mode">🌙</button>
+    </div>
   </header>
+
+  <div id="google_translate_element" class="translate-box"></div>
+
 
   <div class="card">
     <div class="output-row">
       <span id="output">clique em gerar</span>
-      <button class="icon-btn" id="copyBtn" title="Copiar">⧉</button>
-      <button class="icon-btn" id="genBtn" title="Gerar nova">↻</button>
+      <button class="icon-btn" id="copyBtn" title="Copiar" data-en-title="Copy">⧉</button>
+      <button class="icon-btn" id="genBtn" title="Gerar nova" data-en-title="Generate new">↻</button>
     </div>
     <div class="strength" id="strengthBars">
       <span></span><span></span><span></span><span></span>
@@ -232,57 +277,56 @@
 
   <div class="card">
     <div class="field">
-      <div class="field-label">Comprimento <b id="lenVal">16</b></div>
+      <div class="field-label"><span data-en="Length">Comprimento</span> <b id="lenVal">16</b></div>
       <input type="range" id="lenRange" min="5" max="24" value="16">
     </div>
     <div class="field">
       <div class="checks">
-        <label class="check"><input type="checkbox" id="cLower" checked> minúsculas (a-z)</label>
-        <label class="check"><input type="checkbox" id="cUpper" checked> maiúsculas (A-Z)</label>
-        <label class="check"><input type="checkbox" id="cNum" checked> números (0-9)</label>
-        <label class="check"><input type="checkbox" id="cSym" checked> símbolos (!@#$)</label>
+        <label class="check"><input type="checkbox" id="cLower" checked> <span data-en="lowercase (a-z)">minúsculas (a-z)</span></label>
+        <label class="check"><input type="checkbox" id="cUpper" checked> <span data-en="uppercase (A-Z)">maiúsculas (A-Z)</span></label>
+        <label class="check"><input type="checkbox" id="cNum" checked> <span data-en="numbers (0-9)">números (0-9)</span></label>
+        <label class="check"><input type="checkbox" id="cSym" checked> <span data-en="symbols (!@#$)">símbolos (!@#$)</span></label>
       </div>
     </div>
-    <button class="primary" id="genBtn2">Gerar senha</button>
+    <button class="primary" id="genBtn2" data-en="Generate password">Gerar senha</button>
   </div>
 
   <div class="card">
-    <p class="section-title">Referências por tema</p>
-    <p class="section-note">
-      Digite um tema, nome ou interesse — não sua senha. No Artifact do claude.ai,
-      pergunta ao Claude; fora dele (app de desktop, HTML local), busca na
+    <p class="section-title" data-en="References by theme">Referências por tema</p>
+    <p class="section-note" data-en="Type a theme, name or interest — not your password. The search is done on Wikipedia and Datamuse — both free, no key — and optionally your own Anthropic key (see &quot;advanced options&quot;). Without internet, it falls back to a built-in list of popular themes.">
+      Digite um tema, nome ou interesse — não sua senha. A busca é feita na
       Wikipédia e na Datamuse — ambas gratuitas, sem chave — e opcionalmente na
       sua própria chave da Anthropic (veja "opções avançadas"). Sem internet, cai
       numa base de temas populares embutida no app.
     </p>
-    <input type="text" id="topicInput" placeholder="escreva um tema ou algo que você goste bastante" maxlength="60">
-    <button class="secondary" id="topicBtn">Buscar referências</button>
+    <input type="text" id="topicInput" placeholder="escreva um tema ou algo que você goste bastante" data-en-placeholder="write a theme or something you like a lot" maxlength="60">
+    <button class="secondary" id="topicBtn" data-en="Search references">Buscar referências</button>
     <div id="topicStatus" class="strength-label" style="margin-top:10px;"></div>
     <div class="variants" id="topicOut"></div>
 
     <details style="margin-top:14px;">
-      <summary style="cursor:pointer; font-size:13px; color:var(--ink-dim);">opções avançadas</summary>
-      <p class="section-note" style="margin-top:10px;">
+      <summary style="cursor:pointer; font-size:13px; color:var(--ink-dim);" data-en="advanced options">opções avançadas</summary>
+      <p class="section-note" style="margin-top:10px;" data-en="An Anthropic key (console.anthropic.com) gives better results for very specific themes. It stays saved only on your device and is sent straight to Anthropic — never through us. Usage has a cost, billed by Anthropic to your account.">
         Uma chave da Anthropic (console.anthropic.com) dá resultados melhores pra
         temas bem específicos. Fica salva só no seu dispositivo, é enviada direto
         pra Anthropic — nunca passa por nós. Uso tem custo, cobrado pela Anthropic
         na sua conta.
       </p>
       <input type="password" id="apiKeyInput" placeholder="sk-ant-..." maxlength="200">
-      <button class="secondary" id="apiKeySave">Salvar chave</button>
+      <button class="secondary" id="apiKeySave" data-en="Save key">Salvar chave</button>
       <div id="apiKeyStatus" class="strength-label" style="margin-top:8px;"></div>
     </details>
   </div>
 
   <div class="card">
-    <p class="section-title">Variações de uma senha ou palavra</p>
-    <p class="section-note">
+    <p class="section-title" data-en="Variations of a password or word">Variações de uma senha ou palavra</p>
+    <p class="section-note" data-en="These variations are created locally, right in your browser, mixing uppercase letters, numbers and symbols that look like letters. Paste your own words here, or tap a reference found above to generate straight from it.">
       Essas variações são criadas localmente, aqui no navegador, misturando maiúsculas,
       números e símbolos parecidos com as letras. Cole aqui palavras suas, ou toque em uma
       referência encontrada acima para gerar direto a partir dela.
     </p>
-    <input type="text" id="baseWord" placeholder="ex: sol,casa,tigre" maxlength="120">
-    <button class="secondary" id="varyBtn">Gerar variações</button>
+    <input type="text" id="baseWord" placeholder="ex: sol,casa,tigre" data-en-placeholder="ex: sun,house,tiger" maxlength="120">
+    <button class="secondary" id="varyBtn" data-en="Generate variations">Gerar variações</button>
     <div class="variants" id="variantsOut"></div>
   </div>
 </div>
@@ -436,6 +480,52 @@ document.getElementById('varyBtn').addEventListener('click', () => {
 
 doGenerate();
 
+// --- Idioma ---
+// Online: Google Website Translator (traduz a página toda, todos os idiomas).
+// Offline (sem internet): alterna pro inglês usando texto já embutido no código.
+let translateAvailable = false;
+
+window.googleTranslateElementInit = function () {
+  translateAvailable = true;
+  new google.translate.TranslateElement(
+    { pageLanguage: 'pt', autoDisplay: false },
+    'google_translate_element'
+  );
+};
+(function loadGoogleTranslate() {
+  const s = document.createElement('script');
+  s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  s.onerror = () => {
+    document.getElementById('langToggle').title = 'English (offline)';
+  };
+  document.head.appendChild(s);
+})();
+
+let localLangIsEnglish = false;
+function applyLocalEnglish(toEnglish) {
+  document.querySelectorAll('[data-en]').forEach(el => {
+    if (!el.dataset.pt) el.dataset.pt = el.textContent;
+    el.textContent = toEnglish ? el.dataset.en : el.dataset.pt;
+  });
+  document.querySelectorAll('[data-en-placeholder]').forEach(el => {
+    if (!el.dataset.ptPlaceholder) el.dataset.ptPlaceholder = el.placeholder;
+    el.placeholder = toEnglish ? el.dataset.enPlaceholder : el.dataset.ptPlaceholder;
+  });
+  document.querySelectorAll('[data-en-title]').forEach(el => {
+    if (!el.dataset.ptTitle) el.dataset.ptTitle = el.title;
+    el.title = toEnglish ? el.dataset.enTitle : el.dataset.ptTitle;
+  });
+  localLangIsEnglish = toEnglish;
+}
+
+document.getElementById('langToggle').addEventListener('click', () => {
+  if (translateAvailable) {
+    document.getElementById('google_translate_element').classList.toggle('open');
+  } else {
+    applyLocalEnglish(!localLangIsEnglish);
+  }
+});
+
 // --- Modo escuro ---
 (function initTheme() {
   const toggle = document.getElementById('themeToggle');
@@ -562,7 +652,7 @@ async function fetchViaSample(topic) {
   const sample = await getSample();
   if (typeof claude === 'undefined' || !sample) return null;
   const result = await sample.json(
-    `Tema/interesse: "${topic}". Liste de 6 a 10 palavras curtas associadas a esse tema ` +
+    `Tema/interesse: "${topic}". Liste de 15 a 20 palavras curtas associadas a esse tema ` +
     `(apelidos, termos relacionados, conceitos, símbolos, gírias de fã-clube, traduções). ` +
     `Cada item deve ser uma única palavra, sem espaços, sem acentos, minúscula, boa para compor uma senha. ` +
     `Responda APENAS com um array JSON de strings, nada mais.`,
@@ -572,7 +662,7 @@ async function fetchViaSample(topic) {
 }
 
 async function fetchViaDatamuse(topic) {
-  const res = await fetch('https://api.datamuse.com/words?ml=' + encodeURIComponent(topic) + '&max=10');
+  const res = await fetch('https://api.datamuse.com/words?ml=' + encodeURIComponent(topic) + '&max=24');
   if (!res.ok) throw new Error('datamuse_error');
   const data = await res.json();
   return Array.isArray(data) ? data.map(item => item.word).filter(Boolean) : [];
@@ -608,7 +698,7 @@ async function fetchViaWikipedia(topic) {
     .filter(w => w.length >= 3 && w.length <= 16)
     .filter(w => w !== topicNorm && !STOPWORDS.has(w));
 
-  return [...new Set(words)].slice(0, 8);
+  return [...new Set(words)].slice(0, 24);
 }
 
 async function fetchViaAnthropicKey(topic, apiKey) {
@@ -625,7 +715,7 @@ async function fetchViaAnthropicKey(topic, apiKey) {
       max_tokens: 300,
       messages: [{
         role: 'user',
-        content: `Tema/interesse: "${topic}". Liste de 6 a 10 palavras curtas associadas a esse tema ` +
+        content: `Tema/interesse: "${topic}". Liste de 15 a 20 palavras curtas associadas a esse tema ` +
           `(apelidos, termos relacionados, conceitos, símbolos, gírias de fã-clube, traduções). ` +
           `Cada item deve ser uma única palavra, sem espaços, sem acentos, minúscula, boa para compor uma senha. ` +
           `Responda APENAS com um array JSON de strings, nada mais, sem markdown.`
@@ -644,6 +734,7 @@ async function fetchViaAnthropicKey(topic, apiKey) {
 }
 
 function renderTopicWords(words, status, out) {
+  out.innerHTML = '';
   const cleanWords = words.map(w => w.trim().toLowerCase().replace(/\s+/g, '')).filter(Boolean);
   if (!cleanWords.length) {
     status.textContent = 'Não encontrei referências para esse tema. Tente outro termo.';
@@ -668,77 +759,122 @@ function renderTopicWords(words, status, out) {
   });
 }
 
-document.getElementById('topicBtn').addEventListener('click', async () => {
-  const topic = document.getElementById('topicInput').value.trim();
-  const status = document.getElementById('topicStatus');
-  const out = document.getElementById('topicOut');
-  out.innerHTML = '';
-  if (!topic) { status.textContent = 'digite um tema primeiro'; return; }
+function shuffleArray(arr) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = secureRandomInt(i + 1);
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
-  status.textContent = 'buscando referências...';
+// pool de palavras já encontradas por tema, pra não precisar buscar de novo
+// na rede a cada clique — só mostra um lote novo embaralhado
+const topicPools = {};
+const BATCH_SIZE = 8;
 
+async function fetchTopicPool(topic) {
   // 1) capacidade "sample" do Artifact (claude.ai)
   try {
     const words = await fetchViaSample(topic);
-    if (words !== null) {
-      renderTopicWords(words, status, out);
-      return;
-    }
+    if (words !== null && words.length) return { words };
   } catch (e) {
-    if (e && e.code === 'not_granted') {
-      status.textContent = 'Você precisa permitir o acesso à IA para usar essa feature.';
-      return;
-    }
-    if (e && e.code === 'rate_limited') {
-      status.textContent = 'Muitas tentativas — espere um pouco e tente de novo.';
-      return;
-    }
-    // qualquer outro erro: segue para as próximas fontes
+    if (e && e.code === 'not_granted') return { error: 'not_granted' };
+    if (e && e.code === 'rate_limited') return { error: 'rate_limited' };
   }
 
   // 2) Wikipédia (gratuita, sem chave, boa pra nomes próprios e temas específicos)
   try {
     const words = await fetchViaWikipedia(topic);
-    if (words.length) {
-      renderTopicWords(words, status, out);
-      return;
-    }
+    if (words.length) return { words };
   } catch (e) { /* sem internet, ou artigo não encontrado: segue */ }
 
   // 3) Datamuse (gratuita, boa pra palavras comuns do dia a dia)
   try {
     const words = await fetchViaDatamuse(topic);
-    if (words.length) {
-      renderTopicWords(words, status, out);
-      return;
-    }
-  } catch (e) { /* sem internet, ou fora de um ambiente que permite isso: segue */ }
+    if (words.length) return { words };
+  } catch (e) { /* sem internet: segue */ }
 
   // 4) chave própria da Anthropic, se salva
   const apiKey = getApiKey();
   if (apiKey) {
     try {
-      status.textContent = 'buscando com a sua chave da Anthropic...';
       const words = await fetchViaAnthropicKey(topic, apiKey);
-      renderTopicWords(words, status, out);
-      return;
+      if (words.length) return { words };
     } catch (e) {
-      if (e && e.code === 'invalid_key') {
-        status.textContent = 'Sua chave da Anthropic parece inválida. Confira em "opções avançadas".';
-        return;
-      }
+      if (e && e.code === 'invalid_key') return { error: 'invalid_key' };
     }
   }
 
   // 5) base local embutida — só entra se nada acima funcionou (ex: sem internet)
   const localWords = findLocalTopic(topic);
-  if (localWords) {
-    status.textContent = 'sem conexão — usando base local embutida:';
-    renderTopicWords(localWords, status, out);
+  if (localWords) return { words: localWords, offline: true };
+
+  return { words: [] };
+}
+
+function showNextBatch(norm, status, out) {
+  const pool = topicPools[norm];
+  let batch = pool.words.slice(pool.cursor, pool.cursor + BATCH_SIZE);
+  pool.cursor += BATCH_SIZE;
+  if (pool.cursor >= pool.words.length) {
+    // esgotou as opções: reembaralha pra próxima vez
+    pool.words = shuffleArray(pool.words);
+    pool.cursor = 0;
+  }
+  renderTopicWords(batch, status, out);
+  const hint = pool.words.length > BATCH_SIZE
+    ? ' — aperte "Buscar referências" de novo pra ver outras opções'
+    : '';
+  status.textContent += hint;
+}
+
+async function runTopicSearch() {
+  const topic = document.getElementById('topicInput').value.trim();
+  const status = document.getElementById('topicStatus');
+  const out = document.getElementById('topicOut');
+  if (!topic) { status.textContent = 'digite um tema primeiro'; out.innerHTML = ''; return; }
+
+  const norm = normalizeTopic(topic);
+
+  // já temos esse tema em cache: só mostra um lote novo, sem ir na rede de novo
+  if (topicPools[norm] && topicPools[norm].words.length) {
+    showNextBatch(norm, status, out);
     return;
   }
 
-  status.textContent = 'Sem conexão disponível e esse tema não está na base local. Tente novamente mais tarde ou use variações manuais abaixo.';
+  status.textContent = 'buscando referências...';
+
+  const result = await fetchTopicPool(topic);
+
+  if (result.error === 'not_granted') {
+    status.textContent = 'Você precisa permitir o acesso à IA para usar essa feature.';
+    return;
+  }
+  if (result.error === 'rate_limited') {
+    status.textContent = 'Muitas tentativas — espere um pouco e tente de novo.';
+    return;
+  }
+  if (result.error === 'invalid_key') {
+    status.textContent = 'Sua chave da Anthropic parece inválida. Confira em "opções avançadas".';
+    return;
+  }
+  if (!result.words.length) {
+    status.textContent = 'Sem conexão disponível e esse tema não está na base local. Tente novamente mais tarde ou use variações manuais abaixo.';
+    return;
+  }
+
+  topicPools[norm] = { words: shuffleArray(result.words), cursor: 0 };
+  showNextBatch(norm, status, out);
+  if (result.offline) status.textContent = 'sem conexão — usando base local embutida: ' + status.textContent;
+}
+
+document.getElementById('topicBtn').addEventListener('click', runTopicSearch);
+document.getElementById('topicInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    runTopicSearch();
+  }
 });
 
 document.getElementById('apiKeySave').addEventListener('click', () => {
