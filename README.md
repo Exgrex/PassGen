@@ -1,4 +1,4 @@
-# 🔐 PassGen
+# PassGen
 
 **Desktop password generator focused on security, privacy, and local processing.**
 
@@ -10,9 +10,9 @@ The project's goal is to keep password generation and transformation on the user
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎲 Password Generation
+### Password Generation
 
 - Passwords from **5 to 24 characters**
 - Lowercase letters
@@ -25,7 +25,7 @@ The project's goal is to keep password generation and transformation on the user
 - Copy password button
 - Quick new-password generation
 
-### 🔄 Password Variations
+### Password Variations
 
 Provide a word or base password to generate different variations.
 
@@ -52,7 +52,7 @@ DraG0n@7
 
 Variations are processed locally by the application.
 
-### 💡 Topic-Based References
+### Topic-Based References
 
 Enter a topic, name, or interest to receive related words that can be used as a basis for generating password variations.
 
@@ -78,19 +78,19 @@ The feature uses multiple reference sources with a fallback system:
 4. Anthropic API, if a personal API key is configured
 5. Built-in local topic database
 
-### 🌙 Dark Mode
+### Dark Mode
 
 PassGen supports both light and dark modes.
 
 The selected preference is saved locally and restored on the next launch.
 
-### 📋 Copy Password
+### Copy Password
 
 Generated passwords can be copied directly from the interface.
 
 ---
 
-# 🛠️ Technologies
+# Technologies
 
 The project uses:
 
@@ -108,7 +108,7 @@ The project uses:
 
 ---
 
-# 📋 Requirements
+# Requirements
 
 To run PassGen from source, you need:
 
@@ -127,7 +127,7 @@ If these commands are not recognized, install Node.js before continuing.
 
 ---
 
-# 📥 Installation
+# Installation
 
 Clone the repository:
 
@@ -149,7 +149,7 @@ npm install
 
 ---
 
-# ▶️ Running the Application
+# Running the Application
 
 Start PassGen in development mode:
 
@@ -167,7 +167,7 @@ The application will open in its own desktop window.
 
 ---
 
-# 📦 Building the Installer
+# Building the Installer
 
 PassGen uses **Electron Builder** to generate distributable builds.
 
@@ -199,7 +199,7 @@ npm run build -- --win --publish=never
 
 ---
 
-# 📁 Project Structure
+# Project Structure
 
 ```text
 PassGen/
@@ -316,7 +316,7 @@ The remaining characters are selected randomly, and the final password is shuffl
 
 ---
 
-# 🔐 Random Generation
+# Random Generation
 
 PassGen uses:
 
@@ -330,7 +330,7 @@ This provides a more appropriate source of randomness for password generation.
 
 ---
 
-# 📊 Password Strength Indicator
+# Password Strength Indicator
 
 The application estimates password strength based on the password length and the detected character set.
 
@@ -353,7 +353,7 @@ entropy ≈ password length × log2(character set size)
 
 ---
 
-# 🌐 Topic-Based References
+# Topic-Based References
 
 The topic-reference feature is designed to work with multiple sources.
 
@@ -385,7 +385,7 @@ This allows some topics to continue working without an internet connection.
 
 ---
 
-# 🔒 Privacy
+# Privacy
 
 PassGen is designed to keep password generation and transformation local whenever possible.
 
@@ -410,7 +410,7 @@ The topic-based reference feature may access:
 
 The **searched topic** may be sent to the external service being used.
 
-### ⚠️ Important
+### Important
 
 **Never enter a real password as a topic or search term.**
 
@@ -418,7 +418,7 @@ The topic-reference feature should only be used with subjects, interests, or gen
 
 ---
 
-# 🔑 Anthropic API Key
+# Anthropic API Key
 
 The optional Anthropic integration can provide references for more specific topics.
 
@@ -441,7 +441,7 @@ The key is not sent to the PassGen developer. When used, requests are sent direc
 
 ---
 
-# 🖥️ Electron Configuration
+# Electron Configuration
 
 PassGen uses Electron security settings including:
 
@@ -462,7 +462,7 @@ This was included to work around GPU-related white-screen issues on some machine
 
 ---
 
-# 🐛 Development and Debugging
+# Development and Debugging
 
 During development, DevTools can be opened using:
 
@@ -488,7 +488,7 @@ The Electron main process also logs loading failures to the console.
 
 ---
 
-# 🤖 Automated Build
+#  Automated Build
 
 The project includes a Windows build workflow using GitHub Actions.
 
@@ -512,7 +512,7 @@ Upload the artifact
 
 ---
 
-# 👨‍💻 Author
+# Author
 
 Developed by **Exgrex**.
 
