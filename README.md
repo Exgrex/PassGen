@@ -290,7 +290,7 @@ The workflow uses a Windows runner, installs Node.js 20, installs dependencies, 
 
 ---
 
-# 🧠 How the Generator Works
+# How the Generator Works
 
 PassGen uses separate character sets:
 
