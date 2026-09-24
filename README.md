@@ -462,32 +462,6 @@ This was included to work around GPU-related white-screen issues on some machine
 
 ---
 
-# Development and Debugging
-
-During development, DevTools can be opened using:
-
-```text
-F12
-```
-
-or:
-
-```text
-Ctrl + Shift + I
-```
-
-This allows you to inspect:
-
-- JavaScript errors
-- Loading errors
-- Network requests
-- Console output
-- Interface elements
-
-The Electron main process also logs loading failures to the console.
-
----
-
 #  Automated Build
 
 The project includes a Windows build workflow using GitHub Actions.
