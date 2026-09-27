@@ -169,25 +169,47 @@
   }
   .theme-toggle:hover { border-color: var(--brass); color: var(--brass); }
 
-  .header-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+  .header-buttons { display: flex; gap: 8px; flex-shrink: 0; position: relative; }
 
-  .translate-box {
+  /* o widget do Google fica escondido: usamos ele só como motor de tradução,
+     nunca mostramos a interface dele (nem o seletor, nem a barra do topo) */
+  #google_translate_element { display: none !important; }
+  .goog-te-banner-frame.skiptranslate { display: none !important; }
+  body { top: 0px !important; }
+  .goog-text-highlight { background: none !important; box-shadow: none !important; }
+
+  .lang-menu {
     display: none;
-    margin: -8px 0 18px;
-    padding: 10px 12px;
+    position: absolute;
+    top: 46px;
+    right: 0;
     background: var(--panel);
     border: 1px solid var(--line);
     border-radius: 10px;
-    max-width: 100%;
-    overflow-x: auto;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    padding: 6px;
+    min-width: 170px;
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 20;
   }
-  .translate-box.open { display: block; }
-  /* o Google injeta seu próprio iframe/estilo aqui dentro; não dá pra controlar 100% */
-  .goog-logo-link, .goog-te-gadget span { display: none !important; }
-  .goog-te-gadget { font-family: 'Space Grotesk', sans-serif !important; font-size: 13px !important; color: var(--ink-dim) !important; }
-  .goog-te-gadget select { max-width: 100%; }
-  .skiptranslate iframe { max-width: 100%; }
-  body.translated-ltr { top: 0 !important; }
+  .lang-menu.open { display: block; }
+  .lang-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    padding: 9px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+  .lang-menu button:hover { background: var(--panel-2); color: var(--brass); }
+  .lang-menu button.active { color: var(--teal); font-weight: 700; }
+
 
   .section-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .section-note { font-size: 13px; color: var(--ink-dim); margin: 0 0 16px; line-height: 1.5; }
@@ -257,11 +279,24 @@
     <div class="header-buttons">
       <button class="theme-toggle" id="langToggle" title="Mudar idioma" data-en-title="Change language">🌐</button>
       <button class="theme-toggle" id="themeToggle" title="Alternar modo escuro" data-en-title="Toggle dark mode">🌙</button>
+      <div class="lang-menu" id="langMenu">
+        <button type="button" data-lang="pt" class="active">Português</button>
+        <button type="button" data-lang="en">English</button>
+        <button type="button" data-lang="es">Español</button>
+        <button type="button" data-lang="fr">Français</button>
+        <button type="button" data-lang="de">Deutsch</button>
+        <button type="button" data-lang="it">Italiano</button>
+        <button type="button" data-lang="zh-CN">中文</button>
+        <button type="button" data-lang="ja">日本語</button>
+        <button type="button" data-lang="ko">한국어</button>
+        <button type="button" data-lang="ru">Русский</button>
+        <button type="button" data-lang="ar">العربية</button>
+        <button type="button" data-lang="hi">हिन्दी</button>
+      </div>
     </div>
   </header>
 
-  <div id="google_translate_element" class="translate-box"></div>
-
+  <div id="google_translate_element"></div>
 
   <div class="card">
     <div class="output-row">
@@ -481,14 +516,16 @@ document.getElementById('varyBtn').addEventListener('click', () => {
 doGenerate();
 
 // --- Idioma ---
-// Online: Google Website Translator (traduz a página toda, todos os idiomas).
+// Online: Google Translate como motor, mas escondido — nunca mostramos a
+// interface dele (nem seletor, nem a barra do topo). Quem aparece é o nosso
+// próprio menu (#langMenu), com a cara do app.
 // Offline (sem internet): alterna pro inglês usando texto já embutido no código.
 let translateAvailable = false;
 
 window.googleTranslateElementInit = function () {
   translateAvailable = true;
   new google.translate.TranslateElement(
-    { pageLanguage: 'pt', autoDisplay: false },
+    { pageLanguage: 'pt', autoDisplay: false, includedLanguages: 'en,es,fr,de,it,zh-CN,ja,ko,ru,ar,hi' },
     'google_translate_element'
   );
 };
@@ -518,11 +555,50 @@ function applyLocalEnglish(toEnglish) {
   localLangIsEnglish = toEnglish;
 }
 
-document.getElementById('langToggle').addEventListener('click', () => {
+// dispara a tradução do Google por trás dos panos, usando o <select> escondido
+// que o widget cria — sem nunca mostrar a interface dele.
+function translateTo(langCode) {
+  const combo = document.querySelector('.goog-te-combo');
+  if (!combo) return;
+  combo.value = langCode;
+  combo.dispatchEvent(new Event('change'));
+}
+
+// restaura o texto original apagando o cookie que o Google usa e recarregando
+// a página — é o jeito padrão de "desfazer" a tradução dele.
+function restoreOriginalLanguage() {
+  document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + location.hostname;
+  location.reload();
+}
+
+const langMenu = document.getElementById('langMenu');
+
+document.getElementById('langToggle').addEventListener('click', (e) => {
+  e.stopPropagation();
   if (translateAvailable) {
-    document.getElementById('google_translate_element').classList.toggle('open');
+    langMenu.classList.toggle('open');
   } else {
     applyLocalEnglish(!localLangIsEnglish);
+  }
+});
+
+langMenu.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-lang]');
+  if (!btn) return;
+  langMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  langMenu.classList.remove('open');
+  if (btn.dataset.lang === 'pt') {
+    restoreOriginalLanguage();
+  } else {
+    translateTo(btn.dataset.lang);
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if (!langMenu.contains(e.target) && e.target.id !== 'langToggle') {
+    langMenu.classList.remove('open');
   }
 });
 
