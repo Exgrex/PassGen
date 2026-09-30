@@ -230,7 +230,10 @@ const langMenu = document.getElementById('langMenu');
 
 document.getElementById('langToggle').addEventListener('click', (e) => {
   e.stopPropagation();
-  if (translateAvailable) {
+  // mesmo que o Google diga que carregou, confere se o seletor interno dele
+  // existe de verdade antes de confiar — senão cai pro inglês local
+  const comboReady = !!document.querySelector('.goog-te-combo');
+  if (translateAvailable && comboReady) {
     langMenu.classList.toggle('open');
   } else {
     applyLocalEnglish(!localLangIsEnglish);

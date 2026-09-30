@@ -163,7 +163,16 @@
 
   /* o widget do Google fica escondido: usamos ele só como motor de tradução,
      nunca mostramos a interface dele (nem o seletor, nem a barra do topo) */
-  #google_translate_element { display: none !important; }
+  /* escondido visualmente, mas ainda "renderizado" — display:none pode
+     impedir o Google de inicializar o seletor interno dele direito */
+  #google_translate_element {
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+  }
   iframe.goog-te-banner-frame, .goog-te-banner-frame,
   .goog-te-balloon-frame, #goog-gt-tt { display: none !important; visibility: hidden !important; height: 0 !important; }
   body { top: 0px !important; }
