@@ -1,3 +1,11 @@
+
+
+https://github.com/user-attachments/assets/c908f8ab-e5ed-43e3-b7ab-7a31a84cea5f
+
+
+
+https://github.com/user-attachments/assets/1f788cb1-b7df-4b58-a842-5585eebb53cd
+
 # PassGen
 
 **Desktop password generator focused on security, privacy, and local processing.**
@@ -497,3 +505,7 @@ https://github.com/Exgrex
 Repository:
 
 https://github.com/Exgrex/PassGen
+
+
+https://github.com/user-attachments/assets/155fe08f-9bae-4ec6-880a-8d25da46bf8c
+
