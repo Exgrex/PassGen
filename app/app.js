@@ -149,29 +149,10 @@ document.getElementById('varyBtn').addEventListener('click', () => {
 doGenerate();
 
 // --- Idioma ---
-// Online: Google Translate como motor, mas escondido — nunca mostramos a
-// interface dele (nem seletor, nem a barra do topo). Quem aparece é o nosso
-// próprio menu (#langMenu), com a cara do app.
-// Offline (sem internet): alterna pro inglês usando texto já embutido no código.
-let translateAvailable = false;
-
-window.googleTranslateElementInit = function () {
-  translateAvailable = true;
-  new google.translate.TranslateElement(
-    { pageLanguage: 'pt', autoDisplay: false, includedLanguages: 'en,es,fr,de,it,zh-CN,ja,ko,ru,ar,hi' },
-    'google_translate_element'
-  );
-};
-(function loadGoogleTranslate() {
-  const s = document.createElement('script');
-  s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-  s.onerror = () => {
-    document.getElementById('langToggle').title = 'English (offline)';
-  };
-  document.head.appendChild(s);
-})();
-
+// Alterna entre português e inglês usando texto já embutido no código —
+// sem depender de nenhum serviço externo, funciona sempre, online ou offline.
 let localLangIsEnglish = false;
+
 function applyLocalEnglish(toEnglish) {
   document.querySelectorAll('[data-en]').forEach(el => {
     if (!el.dataset.pt) el.dataset.pt = el.textContent;
@@ -186,77 +167,13 @@ function applyLocalEnglish(toEnglish) {
     el.title = toEnglish ? el.dataset.enTitle : el.dataset.ptTitle;
   });
   localLangIsEnglish = toEnglish;
+  const btn = document.getElementById('langToggle');
+  btn.textContent = toEnglish ? 'PT' : 'EN';
+  btn.title = toEnglish ? 'Voltar para português' : 'Switch to English';
 }
 
-// dispara a tradução do Google por trás dos panos, usando o <select> escondido
-// que o widget cria — sem nunca mostrar a interface dele.
-function translateTo(langCode) {
-  const combo = document.querySelector('.goog-te-combo');
-  if (!combo) return;
-  combo.value = langCode;
-  combo.dispatchEvent(new Event('change'));
-}
-
-// restaura o texto original apagando o cookie que o Google usa e recarregando
-// a página — é o jeito padrão de "desfazer" a tradução dele.
-function restoreOriginalLanguage() {
-  document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-  document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + location.hostname;
-  location.reload();
-}
-
-// O Google reaplica a barra/deslocamento do corpo via JS dele mesmo, mesmo
-// depois de escondermos por CSS — então ficamos de olho e desfazemos toda
-// vez que ele tenta recolocar.
-(function suppressGoogleBanner() {
-  const hideBits = () => {
-    document.querySelectorAll(
-      'iframe.goog-te-banner-frame, .goog-te-banner-frame, .goog-te-balloon-frame, #goog-gt-tt'
-    ).forEach(el => {
-      el.style.display = 'none';
-      el.style.visibility = 'hidden';
-      el.style.height = '0';
-    });
-    if (document.body.style.top && document.body.style.top !== '0px') {
-      document.body.style.top = '0px';
-    }
-  };
-  hideBits();
-  const observer = new MutationObserver(hideBits);
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
-})();
-
-const langMenu = document.getElementById('langMenu');
-
-document.getElementById('langToggle').addEventListener('click', (e) => {
-  e.stopPropagation();
-  // mesmo que o Google diga que carregou, confere se o seletor interno dele
-  // existe de verdade antes de confiar — senão cai pro inglês local
-  const comboReady = !!document.querySelector('.goog-te-combo');
-  if (translateAvailable && comboReady) {
-    langMenu.classList.toggle('open');
-  } else {
-    applyLocalEnglish(!localLangIsEnglish);
-  }
-});
-
-langMenu.addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-lang]');
-  if (!btn) return;
-  langMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  langMenu.classList.remove('open');
-  if (btn.dataset.lang === 'pt') {
-    restoreOriginalLanguage();
-  } else {
-    translateTo(btn.dataset.lang);
-  }
-});
-
-document.addEventListener('click', (e) => {
-  if (!langMenu.contains(e.target) && e.target.id !== 'langToggle') {
-    langMenu.classList.remove('open');
-  }
+document.getElementById('langToggle').addEventListener('click', () => {
+  applyLocalEnglish(!localLangIsEnglish);
 });
 
 // --- Modo escuro ---

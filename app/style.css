@@ -159,57 +159,8 @@
   }
   .theme-toggle:hover { border-color: var(--brass); color: var(--brass); }
 
-  .header-buttons { display: flex; gap: 8px; flex-shrink: 0; position: relative; }
-
-  /* o widget do Google fica escondido: usamos ele só como motor de tradução,
-     nunca mostramos a interface dele (nem o seletor, nem a barra do topo) */
-  /* escondido visualmente, mas ainda "renderizado" — display:none pode
-     impedir o Google de inicializar o seletor interno dele direito */
-  #google_translate_element {
-    position: absolute !important;
-    left: -9999px !important;
-    top: -9999px !important;
-    width: 1px !important;
-    height: 1px !important;
-    overflow: hidden !important;
-  }
-  iframe.goog-te-banner-frame, .goog-te-banner-frame,
-  .goog-te-balloon-frame, #goog-gt-tt { display: none !important; visibility: hidden !important; height: 0 !important; }
-  body { top: 0px !important; }
-  .goog-text-highlight { background: none !important; box-shadow: none !important; }
-
-  .lang-menu {
-    display: none;
-    position: absolute;
-    top: 46px;
-    right: 0;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
-    padding: 6px;
-    min-width: 170px;
-    max-height: 280px;
-    overflow-y: auto;
-    z-index: 20;
-  }
-  .lang-menu.open { display: block; }
-  .lang-menu button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    color: var(--ink);
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 14px;
-    padding: 9px 10px;
-    border-radius: 7px;
-    cursor: pointer;
-  }
-  .lang-menu button:hover { background: var(--panel-2); color: var(--brass); }
-  .lang-menu button.active { color: var(--teal); font-weight: 700; }
-
+  .header-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+  #langToggle { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
 
   .section-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .section-note { font-size: 13px; color: var(--ink-dim); margin: 0 0 16px; line-height: 1.5; }
